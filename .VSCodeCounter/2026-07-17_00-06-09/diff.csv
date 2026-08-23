@@ -1,0 +1,11 @@
+"filename", "language", "XML", "Java Properties", "Java", "comment", "blank", "total"
+"c:\Users\Dasika Sarath\Desktop\sheprenure\pom.xml", "XML", 5, 0, 0, 0, 3, 8
+"c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Entity\ProductEntity.java", "Java", 0, 0, 6, -2, 2, 6
+"c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Repository\ProductRepository.java", "Java", 0, 0, 1, 0, -1, 0
+"c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Services\CloudService.java", "Java", 0, 0, 21, 0, 15, 36
+"c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Services\ProductService.java", "Java", 0, 0, 17, 0, 9, 26
+"c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\cloudinaryConfig.java", "Java", 0, 0, 23, 0, 10, 33
+"c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\controllers\productController.java", "Java", 0, 0, 8, 1, 7, 16
+"c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\CloudinaryResponse.java", "Java", 0, 0, 11, 0, 5, 16
+"c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\resources\application.properties", "Java Properties", 0, 3, 0, 0, 1, 4
+"Total", "-", 5, 3, 87, -1, 51, 145

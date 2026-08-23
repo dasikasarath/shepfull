@@ -1,0 +1,105 @@
+Date : 2026-07-26 23:34:36
+Directory : c:\Users\Dasika Sarath\Desktop\sheprenure
+Total : 56 files,  1750 codes, 112 comments, 771 blanks, all 2633 lines
+
+Languages
++-----------------+------------+------------+------------+------------+------------+
+| language        | files      | code       | comment    | blank      | total      |
++-----------------+------------+------------+------------+------------+------------+
+| Java            |         51 |      1,465 |         83 |        710 |      2,258 |
+| Batch           |          1 |        139 |         26 |         25 |        190 |
+| XML             |          1 |        125 |          3 |         26 |        154 |
+| Java Properties |          2 |         18 |          0 |         10 |         28 |
+| Docker          |          1 |          3 |          0 |          0 |          3 |
++-----------------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                  | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                     |         56 |      1,750 |        112 |        771 |      2,633 |
+| . (Files)                                                                                                             |          3 |        267 |         29 |         51 |        347 |
+| .mvn                                                                                                                  |          1 |          3 |          0 |          1 |          4 |
+| .mvn\wrapper                                                                                                          |          1 |          3 |          0 |          1 |          4 |
+| src                                                                                                                   |         52 |      1,480 |         83 |        719 |      2,282 |
+| src\main                                                                                                              |         51 |      1,471 |         83 |        714 |      2,268 |
+| src\main\java                                                                                                         |         50 |      1,456 |         83 |        705 |      2,244 |
+| src\main\java\ec                                                                                                      |         50 |      1,456 |         83 |        705 |      2,244 |
+| src\main\java\ec\example                                                                                              |         50 |      1,456 |         83 |        705 |      2,244 |
+| src\main\java\ec\example\sheprenure                                                                                   |         50 |      1,456 |         83 |        705 |      2,244 |
+| src\main\java\ec\example\sheprenure (Files)                                                                           |          5 |        187 |          1 |         80 |        268 |
+| src\main\java\ec\example\sheprenure\Entity                                                                            |          8 |        226 |         51 |         78 |        355 |
+| src\main\java\ec\example\sheprenure\Repository                                                                        |          8 |         63 |          0 |         40 |        103 |
+| src\main\java\ec\example\sheprenure\Services                                                                          |          8 |        602 |          5 |        275 |        882 |
+| src\main\java\ec\example\sheprenure\controllers                                                                       |          7 |        261 |         12 |        163 |        436 |
+| src\main\java\ec\example\sheprenure\dto                                                                               |         14 |        117 |         14 |         69 |        200 |
+| src\main\resources                                                                                                    |          1 |         15 |          0 |          9 |         24 |
+| src\test                                                                                                              |          1 |          9 |          0 |          5 |         14 |
+| src\test\java                                                                                                         |          1 |          9 |          0 |          5 |         14 |
+| src\test\java\ec                                                                                                      |          1 |          9 |          0 |          5 |         14 |
+| src\test\java\ec\example                                                                                              |          1 |          9 |          0 |          5 |         14 |
+| src\test\java\ec\example\sheprenure                                                                                   |          1 |          9 |          0 |          5 |         14 |
++-----------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------------------------------------+-----------------+------------+------------+------------+------------+
+| filename                                                                                                              | language        | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------------------------+-----------------+------------+------------+------------+------------+
+| c:\Users\Dasika Sarath\Desktop\sheprenure\.mvn\wrapper\maven-wrapper.properties                                       | Java Properties |          3 |          0 |          1 |          4 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\Dockerfile                                                                  | Docker          |          3 |          0 |          0 |          3 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\mvnw.cmd                                                                    | Batch           |        139 |         26 |         25 |        190 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\pom.xml                                                                     | XML             |        125 |          3 |         26 |        154 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Entity\Blocklist.java                   | Java            |         16 |          0 |          8 |         24 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Entity\Cart.java                        | Java            |         18 |          2 |          9 |         29 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Entity\CartItem.java                    | Java            |         23 |          0 |          8 |         31 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Entity\Forgotpassword.java              | Java            |         19 |          0 |          6 |         25 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Entity\OrderItemList.java               | Java            |         21 |         22 |          8 |         51 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Entity\OrderList.java                   | Java            |         68 |          0 |         11 |         79 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Entity\ProductEntity.java               | Java            |         36 |          2 |         20 |         58 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Entity\UserEntity.java                  | Java            |         25 |         25 |          8 |         58 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Repository\BlocklistRepository.java     | Java            |          6 |          0 |          4 |         10 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Repository\CartItemRepository.java      | Java            |         10 |          0 |          7 |         17 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Repository\CartRepository.java          | Java            |          8 |          0 |          6 |         14 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Repository\Forgotmailrepo.java          | Java            |          9 |          0 |          4 |         13 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Repository\OrderItemListRepository.java | Java            |          7 |          0 |          3 |         10 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Repository\OrderListRepository.java     | Java            |          8 |          0 |          4 |         12 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Repository\ProductRepository.java       | Java            |          8 |          0 |          5 |         13 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Repository\UserRepository.java          | Java            |          7 |          0 |          7 |         14 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Security.java                           | Java            |         24 |          0 |         10 |         34 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Services\CartItemService.java           | Java            |         23 |          0 |          5 |         28 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Services\CartService.java               | Java            |        155 |          4 |         78 |        237 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Services\CloudService.java              | Java            |         25 |          0 |         20 |         45 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Services\Forgotservice.java             | Java            |         92 |          0 |         23 |        115 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Services\OrderListService.java          | Java            |         21 |          0 |         15 |         36 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Services\OrderService.java              | Java            |         82 |          0 |         42 |        124 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Services\ProductService.java            | Java            |        105 |          0 |         51 |        156 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\Services\userService.java               | Java            |         99 |          1 |         41 |        141 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\SheprenureApplication.java              | Java            |          9 |          0 |          5 |         14 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\cloudinaryConfig.java                   | Java            |         23 |          0 |         10 |         33 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\controllers\AuthController.java         | Java            |         30 |          1 |         31 |         62 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\controllers\CartController.java         | Java            |         45 |          3 |         25 |         73 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\controllers\Mailcontroller.java         | Java            |         34 |          1 |         14 |         49 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\controllers\OrderController.java        | Java            |         27 |          2 |         19 |         48 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\controllers\OrderListController.java    | Java            |         22 |          1 |         15 |         38 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\controllers\UserController.java         | Java            |         37 |          0 |         18 |         55 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\controllers\productController.java      | Java            |         66 |          4 |         41 |        111 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\CartDto.java                        | Java            |         12 |          7 |          6 |         25 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\CartItemDto.java                    | Java            |          7 |          0 |          5 |         12 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\CloudinaryResponse.java             | Java            |         11 |          0 |          5 |         16 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\OrderListDto.java                   | Java            |          9 |          0 |          4 |         13 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\OrdersDto.java                      | Java            |          9 |          5 |          7 |         21 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\PasswordDto.java                    | Java            |          7 |          0 |          4 |         11 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\PasswordsetDto.java                 | Java            |          7 |          0 |          4 |         11 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\ProductsDto.java                    | Java            |          7 |          2 |          5 |         14 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\ProfileDto.java                     | Java            |         10 |          0 |          6 |         16 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\UpdateProductDto.java               | Java            |          9 |          0 |          4 |         13 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\UpdateProfileDto.java               | Java            |          8 |          0 |          4 |         12 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\UserDto.java                        | Java            |          7 |          0 |          5 |         12 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\VerifyotpDto.java                   | Java            |          7 |          0 |          5 |         12 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\dto\incredecreDto.java                  | Java            |          7 |          0 |          5 |         12 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\jwt.java                                | Java            |         63 |          0 |         22 |         85 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\java\ec\example\sheprenure\securityFilter.java                     | Java            |         68 |          1 |         33 |        102 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\main\resources\application.properties                                   | Java Properties |         15 |          0 |          9 |         24 |
+| c:\Users\Dasika Sarath\Desktop\sheprenure\src\test\java\ec\example\sheprenure\SheprenureApplicationTests.java         | Java            |          9 |          0 |          5 |         14 |
+| Total                                                                                                                 |                 |      1,750 |        112 |        771 |      2,633 |
++-----------------------------------------------------------------------------------------------------------------------+-----------------+------------+------------+------------+------------+
