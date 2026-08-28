@@ -1,4 +1,5 @@
 spring.application.name=sheprenure
+server.forward-headers-strategy=framework
 
 
 # ── Database ──────────────────────────────────────────────────

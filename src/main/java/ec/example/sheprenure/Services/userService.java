@@ -23,6 +23,7 @@ import jakarta.transaction.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
@@ -89,17 +90,20 @@ public class userService {
 
         System.out.println("Generated Registration OTP for " + email + ": " + otp);
 
-        try {
-            SimpleMailMessage msg = new SimpleMailMessage();
-            msg.setTo(email);
-            msg.setSubject("SHEPRENURE - Email Verification Code");
-            msg.setText("Welcome to Sheprenure!\n\nYour registration verification OTP is: " + otp + "\n\nThis OTP expires in 5 minutes. Please do not share it with anyone.");
-            mailSender.send(msg);
-            return "Verification OTP sent to your email!";
-        } catch (Exception e) {
-            System.err.println("Failed to send registration email to " + email + ": " + e.getMessage());
-            return "Verification OTP generated. Mail delivery failed (" + e.getMessage() + "). Please check server logs for OTP or try again.";
-        }
+        CompletableFuture.runAsync(() -> {
+            try {
+                SimpleMailMessage msg = new SimpleMailMessage();
+                msg.setTo(email);
+                msg.setSubject("SHEPRENURE - Email Verification Code");
+                msg.setText("Welcome to Sheprenure!\n\nYour registration verification OTP is: " + otp + "\n\nThis OTP expires in 5 minutes. Please do not share it with anyone.");
+                mailSender.send(msg);
+                System.out.println("Verification OTP email sent successfully to " + email);
+            } catch (Exception e) {
+                System.err.println("Failed to send registration email to " + email + ": " + e.getMessage());
+            }
+        });
+
+        return "Verification OTP sent to your email!";
     }
 
     public String verifyRegistrationOtp(VerifyEmailOtpDto dto) {

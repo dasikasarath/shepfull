@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import javax.management.RuntimeErrorException;
 
@@ -64,18 +65,21 @@ else{
 }
 
         System.out.println("Generated Password Reset OTP for " + name + ": " + otp);
-        SimpleMailMessage msg=new SimpleMailMessage();
-        try{
-           msg.setTo(dbuser.get().getEmail());
-            msg.setSubject("SHEPRENURE PASSWORD RESET");
-            msg.setText(String.valueOf(otp)+" don't share this to anyone (EXPIRES IN 3 MINS) ");
-            ms.send(msg);
-            return "message sent successfully!";
-        }
-        catch(Exception e){
-            System.err.println("Failed to send reset email to " + name + ": " + e.getMessage());
-            return "Failed to send reset email. Check server console for OTP or try again.";
-        }
+        String recipientEmail = dbuser.get().getEmail();
+        CompletableFuture.runAsync(() -> {
+            try {
+                SimpleMailMessage msg = new SimpleMailMessage();
+                msg.setTo(recipientEmail);
+                msg.setSubject("SHEPRENURE PASSWORD RESET");
+                msg.setText(String.valueOf(otp) + " don't share this to anyone (EXPIRES IN 3 MINS)");
+                ms.send(msg);
+                System.out.println("Password reset OTP email sent successfully to " + name);
+            } catch (Exception e) {
+                System.err.println("Failed to send reset email to " + name + ": " + e.getMessage());
+            }
+        });
+
+        return "message sent successfully!";
 
 
 }
