@@ -63,7 +63,8 @@ else{
     frepo.save(reobj);
 }
 
-  SimpleMailMessage msg=new SimpleMailMessage();
+        System.out.println("Generated Password Reset OTP for " + name + ": " + otp);
+        SimpleMailMessage msg=new SimpleMailMessage();
         try{
            msg.setTo(dbuser.get().getEmail());
             msg.setSubject("SHEPRENURE PASSWORD RESET");
@@ -72,7 +73,8 @@ else{
             return "message sent successfully!";
         }
         catch(Exception e){
-            return "failed to send";
+            System.err.println("Failed to send reset email to " + name + ": " + e.getMessage());
+            return "Failed to send reset email. Check server console for OTP or try again.";
         }
 
 

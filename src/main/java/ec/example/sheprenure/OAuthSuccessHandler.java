@@ -38,8 +38,10 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
 
+        String cleanFrontendUrl = (frontendUrl != null ? frontendUrl.trim().replaceAll("/+$", "") : "http://localhost:5173");
+
         if (email == null || email.isBlank()) {
-            String redirectUrl = frontendUrl + "/oauth/callback?error=" + URLEncoder.encode("Email not provided by Google account", StandardCharsets.UTF_8);
+            String redirectUrl = cleanFrontendUrl + "/oauth/callback?error=" + URLEncoder.encode("Email not provided by Google account", StandardCharsets.UTF_8);
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
             return;
         }
@@ -66,13 +68,16 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
             user.setRole("USER");
             user.setIsVerified(true);
             user = userRepository.save(user);
+        } else if (!Boolean.TRUE.equals(user.getIsVerified())) {
+            user.setIsVerified(true);
+            user = userRepository.save(user);
         }
 
         // Generate JWT token for user session
         String token = jwtUtil.generateToken(user);
 
         // Redirect user to frontend with JWT token in query parameter
-        String redirectUrl = frontendUrl + "/oauth/callback?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+        String redirectUrl = cleanFrontendUrl + "/oauth/callback?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }

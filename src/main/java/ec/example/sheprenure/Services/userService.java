@@ -87,6 +87,8 @@ public class userService {
         regOtp.setIsVerified(false);
         regOtpRepo.save(regOtp);
 
+        System.out.println("Generated Registration OTP for " + email + ": " + otp);
+
         try {
             SimpleMailMessage msg = new SimpleMailMessage();
             msg.setTo(email);
@@ -95,7 +97,8 @@ public class userService {
             mailSender.send(msg);
             return "Verification OTP sent to your email!";
         } catch (Exception e) {
-            return "Failed to send verification email. Please check your email address.";
+            System.err.println("Failed to send registration email to " + email + ": " + e.getMessage());
+            return "Verification OTP generated. Mail delivery failed (" + e.getMessage() + "). Please check server logs for OTP or try again.";
         }
     }
 

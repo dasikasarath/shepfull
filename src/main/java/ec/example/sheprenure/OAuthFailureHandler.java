@@ -27,7 +27,8 @@ public class OAuthFailureHandler extends SimpleUrlAuthenticationFailureHandler {
                 ? exception.getMessage()
                 : "Google Authentication failed";
 
-        String redirectUrl = frontendUrl + "/oauth/callback?error=" + URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);
+        String cleanFrontendUrl = (frontendUrl != null ? frontendUrl.trim().replaceAll("/+$", "") : "http://localhost:5173");
+        String redirectUrl = cleanFrontendUrl + "/oauth/callback?error=" + URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }
