@@ -33,6 +33,9 @@ build/
 .vscode/
 
 ### Secrets — never commit these ###
+.env
+.env.local
+.env.production
 src/main/resources/application.properties
 
 ### Frontend ###
