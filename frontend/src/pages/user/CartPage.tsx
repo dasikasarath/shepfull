@@ -4,13 +4,15 @@ import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
 import { getCart, getCartItems, removeFromCart, incrementCart, decrementCart } from '../../api/cart'
 import { getAllProducts } from '../../api/products'
 import { placeOrder } from '../../api/orders'
-import type { Cart, CartItem, ProductEntity } from '../../types'
+import { getProfile } from '../../api/user'
+import type { Cart, CartItem, ProductEntity, ProfileDto } from '../../types'
 import { useToast } from '../../context/ToastContext'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 import { formatCurrency } from '../../utils/format'
+import CompleteProfileModal from '../../components/profile/CompleteProfileModal'
 
 export default function CartPage() {
   const [cart, setCart] = useState<Cart | null>(null)
@@ -21,16 +23,21 @@ export default function CartPage() {
   const [ordering, setOrdering] = useState(false)
   const { showToast } = useToast()
 
+  const [userProfile, setUserProfile] = useState<ProfileDto | null>(null)
+  const [profileModalOpen, setProfileModalOpen] = useState(false)
+
   const loadCart = useCallback(async () => {
     setLoading(true)
     try {
-      const [cartData, itemsData, allProducts] = await Promise.all([
+      const [cartData, itemsData, allProducts, profData] = await Promise.all([
         getCart(),
         getCartItems(),
         getAllProducts(),
+        getProfile().catch(() => null),
       ])
       setCart(cartData)
       setItems(itemsData)
+      setUserProfile(profData)
       const map: Record<number, ProductEntity> = {}
       allProducts.forEach((p) => { map[p.productId] = p })
       setProducts(map)
@@ -86,8 +93,7 @@ export default function CartPage() {
     }
   }
 
-  const handlePlaceOrder = async () => {
-    if (items.length === 0) return
+  const executeOrder = async () => {
     setOrdering(true)
     try {
       const message = await placeOrder({
@@ -103,6 +109,19 @@ export default function CartPage() {
     } finally {
       setOrdering(false)
     }
+  }
+
+  const handlePlaceOrder = async () => {
+    if (items.length === 0) return
+
+    // Check if user has complete profile (address & mobile)
+    if (!userProfile?.shippingAdd?.trim() || !userProfile?.mobile?.trim()) {
+      showToast('Please add your shipping address and mobile number to place the order', 'error')
+      setProfileModalOpen(true)
+      return
+    }
+
+    await executeOrder()
   }
 
   if (loading) return <LoadingSpinner fullPage label="Loading cart..." />
@@ -200,6 +219,16 @@ export default function CartPage() {
           </Button>
         </Card>
       </div>
+
+      <CompleteProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        initialProfile={userProfile}
+        onSuccess={(updated) => {
+          setUserProfile(updated)
+          executeOrder()
+        }}
+      />
     </div>
   )
 }

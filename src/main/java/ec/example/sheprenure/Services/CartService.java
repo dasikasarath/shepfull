@@ -122,62 +122,78 @@ public class CartService {
    }
     
 
-   @Transactional
-   public String incre(incredecreDto input){
-    int pid=input.getPid();
-    int num=input.getQuantity();
-    ProductEntity prod=prepo.findById(pid).orElseThrow(()->new RuntimeException("product not found"));
-    if(prod.getStock()<num){return "unable stock";}
+    @Transactional
+    public String incre(incredecreDto input) {
+        int pid = input.getPid();
+        int num = input.getQuantity();
+        if (num <= 0) return "provide positive values only";
 
-    Authentication auth=SecurityContextHolder.getContext().getAuthentication();
-    int userid=(Integer) auth.getDetails();
+        ProductEntity prod = prepo.findById(pid).orElseThrow(() -> new RuntimeException("product not found"));
 
-    CartItem obj=cirepo.findByUseridAndProductId(userid, pid).orElseThrow(()->new RuntimeException("no previous cart found"));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        int userid = (Integer) auth.getDetails();
 
-    obj.setQuantity(obj.getQuantity()+num);
-    obj.setSubtotal(obj.getSubtotal()+num*prod.getProductPrice());
-    cirepo.save(obj);
+        CartItem obj = cirepo.findByUseridAndProductId(userid, pid)
+                .orElseThrow(() -> new RuntimeException("no previous cart found"));
 
-    Optional<Cart> oobj=crepo.findByUserid(userid);
-    if(oobj.isPresent()){
-        oobj.get().setTotalPrice(oobj.get().getTotalPrice()+num*prod.getProductPrice());
-        crepo.save(oobj.get());
+        if (prod.getStock() < (obj.getQuantity() + num)) {
+            return "unable stock";
+        }
 
-        return "successfully incremented to cart";
-    }
+        obj.setQuantity(obj.getQuantity() + num);
+        obj.setSubtotal(obj.getQuantity() * prod.getProductPrice());
+        cirepo.save(obj);
+
+        Optional<Cart> oobj = crepo.findByUserid(userid);
+        if (oobj.isPresent()) {
+            Cart cart = oobj.get();
+            List<CartItem> items = cirepo.findByUserid(userid);
+            int newTotal = items.stream().mapToInt(CartItem::getSubtotal).sum();
+            cart.setTotalPrice(newTotal);
+            crepo.save(cart);
+            return "successfully incremented to cart";
+        }
         return "failed to add";
-   }
+    }
 
+    @Transactional
+    public String decre(incredecreDto input) {
+        int pid = input.getPid();
+        int quantity = input.getQuantity();
 
-   @Transactional
-public String decre(incredecreDto input){
-    int pid=input.getPid();
-    int quantity=input.getQuantity();
+        if (quantity <= 0) {
+            return "provide positive values only";
+        }
 
-    if(quantity<0){return "provide positive values only";}
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        int userid = (Integer) auth.getDetails();
 
-    Authentication auth=SecurityContextHolder.getContext().getAuthentication();
-    int userid=(Integer) auth.getDetails();
+        ProductEntity prod = prepo.findById(pid).orElseThrow(() -> new RuntimeException("no product found"));
 
-    ProductEntity prod=prepo.findById(pid).orElseThrow(()->new RuntimeException("no product found"));
+        CartItem cio = cirepo.findByUseridAndProductId(userid, pid)
+                .orElseThrow(() -> new RuntimeException("no cart found"));
 
-    CartItem cio=cirepo.findByUseridAndProductId(userid, pid).orElseThrow(()->new RuntimeException("no cart found"));
-    cio.setQuantity(cio.getQuantity()-quantity);
-    cio.setSubtotal(cio.getSubtotal()-quantity*prod.getProductPrice());
-    cirepo.save(cio);
+        if (cio.getQuantity() <= quantity) {
+            // Remove item completely when quantity reaches 0
+            cirepo.delete(cio);
+        } else {
+            cio.setQuantity(cio.getQuantity() - quantity);
+            cio.setSubtotal(cio.getQuantity() * prod.getProductPrice());
+            cirepo.save(cio);
+        }
 
-   Optional<Cart> kbn=crepo.findByUserid(userid);
-   if(kbn.isPresent()){
-    Cart oooob=kbn.get();
-    oooob.setTotalPrice(oooob.getTotalPrice()-quantity*prod.getProductPrice());
-    crepo.save(oooob);
-    return "successfully decremented items from cart";
+        Optional<Cart> kbn = crepo.findByUserid(userid);
+        if (kbn.isPresent()) {
+            Cart cart = kbn.get();
+            List<CartItem> items = cirepo.findByUserid(userid);
+            int newTotal = items.stream().mapToInt(CartItem::getSubtotal).sum();
+            cart.setTotalPrice(newTotal);
+            crepo.save(cart);
+            return "successfully decremented items from cart";
+        }
 
-
-   }
-
-   return "failed to decrement";
-}
+        return "failed to decrement";
+    }
 
 
 

@@ -11,13 +11,21 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import ec.example.sheprenure.Repository.BlocklistRepository;
+import ec.example.sheprenure.Repository.RegisterOtpRepository;
 import ec.example.sheprenure.Repository.UserRepository;
 import ec.example.sheprenure.jwt;
 import ec.example.sheprenure.Entity.Blocklist;
+import ec.example.sheprenure.Entity.RegisterOtp;
 import ec.example.sheprenure.Entity.UserEntity;
 import ec.example.sheprenure.dto.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.*;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+
 @Service //no auth needed//
 public class userService {
 
@@ -25,7 +33,13 @@ public class userService {
     private UserRepository urepo;
 
     @Autowired
+    private RegisterOtpRepository regOtpRepo;
+
+    @Autowired
     private BlocklistRepository brepo;
+
+    @Autowired
+    private JavaMailSender mailSender;
 
     @Autowired
     private jwt jt;
@@ -37,34 +51,108 @@ public class userService {
 
         if(dbobj!=null){
 
-        if(!obj.getPassword().equals(dbobj.getPassword())){
-            return "Incorrect password";
-        }
-        else if(obj.getPassword().equals(dbobj.getPassword())){
+            if(dbobj.getIsVerified() != null && !dbobj.getIsVerified()){
+                return "Please verify your email before logging in";
+            }
 
-            return jt.generateToken(dbobj);
-        
+            if(!obj.getPassword().equals(dbobj.getPassword())){
+                return "Incorrect password";
+            }
+            else if(obj.getPassword().equals(dbobj.getPassword())){
 
-        }
+                return jt.generateToken(dbobj);
+            }
         }
 
         return "Incorrect credentials!";
+    }
 
+    public String sendRegistrationOtp(String email) {
+        if (email == null || email.isBlank()) {
+            return "Email is required";
+        }
 
-}
+        Optional<UserEntity> existingUser = urepo.findByEmail(email);
+        if (existingUser.isPresent()) {
+            return "Email is already registered. Please sign in or use another email.";
+        }
 
+        SecureRandom random = new SecureRandom();
+        int otp = 100000 + random.nextInt(900000);
 
+        RegisterOtp regOtp = regOtpRepo.findByEmail(email).orElse(new RegisterOtp());
+        regOtp.setEmail(email);
+        regOtp.setOtp(String.valueOf(otp));
+        regOtp.setExp(LocalDateTime.now().plusMinutes(5));
+        regOtp.setIsVerified(false);
+        regOtpRepo.save(regOtp);
 
+        try {
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo(email);
+            msg.setSubject("SHEPRENURE - Email Verification Code");
+            msg.setText("Welcome to Sheprenure!\n\nYour registration verification OTP is: " + otp + "\n\nThis OTP expires in 5 minutes. Please do not share it with anyone.");
+            mailSender.send(msg);
+            return "Verification OTP sent to your email!";
+        } catch (Exception e) {
+            return "Failed to send verification email. Please check your email address.";
+        }
+    }
 
-public String postReg(UserEntity data){
-UserEntity db=urepo.findByName(data.getName()).orElse(null);
-if(db!=null){
-    return "use another user name";
-}
-data.setRole("USER");//astadigbandam//
-urepo.save(data);
-return data.getName()+"  registered successfully! of ID  "+data.getUserId();
-}
+    public String verifyRegistrationOtp(VerifyEmailOtpDto dto) {
+        if (dto == null || dto.getEmail() == null || dto.getOtp() == null) {
+            return "Email and OTP are required";
+        }
+
+        Optional<RegisterOtp> regOtpOpt = regOtpRepo.findByEmail(dto.getEmail());
+        if (regOtpOpt.isEmpty()) {
+            return "Please request an OTP first";
+        }
+
+        RegisterOtp regOtp = regOtpOpt.get();
+        if (LocalDateTime.now().isAfter(regOtp.getExp())) {
+            return "OTP has expired. Please request a new one.";
+        }
+
+        if (!regOtp.getOtp().equals(dto.getOtp().trim())) {
+            return "Invalid verification OTP";
+        }
+
+        regOtp.setIsVerified(true);
+        regOtpRepo.save(regOtp);
+        return "Email verified successfully! You can now complete your registration.";
+    }
+
+    @Transactional
+    public String postReg(UserEntity data){
+        UserEntity db=urepo.findByName(data.getName()).orElse(null);
+        if(db!=null){
+            return "use another user name";
+        }
+
+        if (data.getEmail() == null || data.getEmail().isBlank()) {
+            return "Email is required";
+        }
+
+        if (urepo.findByEmail(data.getEmail()).isPresent()) {
+            return "Email is already registered";
+        }
+
+        // Verify that this email was verified via OTP
+        Optional<RegisterOtp> regOtpOpt = regOtpRepo.findByEmail(data.getEmail());
+        if (regOtpOpt.isEmpty() || !Boolean.TRUE.equals(regOtpOpt.get().getIsVerified())) {
+            return "Please verify your email with OTP first before registration";
+        }
+
+        data.setRole("USER");
+        data.setIsVerified(true);
+        urepo.save(data);
+
+        // Clean up OTP record
+        regOtpRepo.deleteByEmail(data.getEmail());
+
+        return data.getName()+"  registered successfully! of ID  "+data.getUserId();
+    }
 
 
 public String logout(HttpServletRequest req){
@@ -132,9 +220,11 @@ public String updateUse(UpdateProfileDto reqobj){
      if(reqobj.getPincode()!=null && !reqobj.getPincode().isBlank()){
         dbobj.setPincode(reqobj.getPincode());
      }
+     if(reqobj.getMobile()!=null && !reqobj.getMobile().isBlank()){
+        dbobj.setMobile(reqobj.getMobile());
+     }
 
      urepo.save(dbobj);
-
 
      return "updated successfully";
 }

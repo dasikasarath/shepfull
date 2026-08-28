@@ -10,6 +10,7 @@ interface AuthContextValue {
   isAuthenticated: boolean
   isAdmin: boolean
   login: (name: string, password: string) => Promise<AuthUser>
+  loginWithToken: (token: string) => AuthUser
   logout: () => Promise<void>
 }
 
@@ -30,6 +31,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const stored = loadStoredAuth()
   const [token, setToken] = useState<string | null>(stored.token)
   const [user, setUser] = useState<AuthUser | null>(stored.user)
+
+  const loginWithToken = useCallback((rawToken: string) => {
+    if (!isJwtToken(rawToken)) {
+      throw new Error('Invalid token received from authentication')
+    }
+    const parsed = parseJwt(rawToken)
+    if (!parsed) {
+      throw new Error('Could not parse user information from token')
+    }
+    localStorage.setItem('token', rawToken)
+    setToken(rawToken)
+    setUser(parsed)
+    return parsed
+  }, [])
 
   const login = useCallback(async (name: string, password: string) => {
     const response = await authApi.login({ name, password })
@@ -67,9 +82,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: !!token && !!user,
       isAdmin: user?.role === 'ADMIN',
       login,
+      loginWithToken,
       logout,
     }),
-    [user, token, login, logout],
+    [user, token, login, loginWithToken, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

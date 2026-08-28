@@ -7,6 +7,7 @@ export interface UserEntity {
   mobile?: string
   shippingAdd?: string
   role?: string
+  isVerified?: boolean
 }
 
 export interface UserDto {
@@ -26,6 +27,7 @@ export interface UpdateProfileDto {
   address?: string
   pincode?: string
   email?: string
+  mobile?: string
 }
 
 export interface PasswordDto {

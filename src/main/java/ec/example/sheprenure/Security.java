@@ -23,6 +23,12 @@ public class Security {
     @Autowired
     private RateLimitingFilter rateLimitingFilter;
 
+    @Autowired
+    private OAuthSuccessHandler oAuthSuccessHandler;
+
+    @Autowired
+    private OAuthFailureHandler oAuthFailureHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource));
@@ -36,10 +42,15 @@ public class Security {
 
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .requestMatchers("/login", "/user/register", "/forgotpassword/**").permitAll()
+            .requestMatchers("/login", "/user/register/**", "/forgotpassword/**", "/oauth2/**", "/login/oauth2/**", "/oauth/**").permitAll()
             .requestMatchers("/admin/**").hasRole("ADMIN")
             .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
             .anyRequest().authenticated()
+        );
+
+        http.oauth2Login(oauth2 -> oauth2
+            .successHandler(oAuthSuccessHandler)
+            .failureHandler(oAuthFailureHandler)
         );
 
         return http.build();

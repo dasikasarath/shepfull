@@ -7,5 +7,5 @@ public class UpdateProfileDto {
     private String address;
     private String pincode;
     private String email;
-    
+    private String mobile;
 }

@@ -7,6 +7,7 @@ import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import OAuthCallbackPage from './pages/OAuthCallbackPage'
 import UserDashboard from './pages/user/UserDashboard'
 import ProductsPage from './pages/user/ProductsPage'
 import ProductDetailPage from './pages/user/ProductDetailPage'
@@ -27,6 +28,7 @@ export default function App() {
         <ToastProvider>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
 
             <Route element={<PublicOnlyRoute />}>
               <Route path="/login" element={<LoginPage />} />

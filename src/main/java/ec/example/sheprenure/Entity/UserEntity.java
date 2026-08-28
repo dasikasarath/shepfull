@@ -29,6 +29,7 @@ public class UserEntity {
     private String mobile;
     private String shippingAdd;
     private String role;
+    private Boolean isVerified = false;
 
  /*    //constructors(7-saltilu)
     public UserEntity(){

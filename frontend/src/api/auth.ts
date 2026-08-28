@@ -6,6 +6,23 @@ import type {
   VerifyotpDto,
 } from '../types'
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+export const GOOGLE_AUTH_URL = `${API_BASE}/oauth2/authorization/google`
+
+export async function sendRegistrationOtp(email: string): Promise<string> {
+  return apiText('/user/register/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  }, false)
+}
+
+export async function verifyRegistrationOtp(email: string, otp: string): Promise<string> {
+  return apiText('/user/register/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email, otp }),
+  }, false)
+}
+
 export async function register(data: UserEntity): Promise<string> {
   return apiText('/user/register', {
     method: 'POST',

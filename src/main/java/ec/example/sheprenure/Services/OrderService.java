@@ -28,71 +28,91 @@ public class OrderService {
     @Autowired
     private ProductRepository prorepo;
 
-    
+    @Autowired
+    private CartRepository cartrepo;
 
-    public String getPlaceOrder(OrdersDto obj){
+    @Autowired
+    private CartItemRepository cartitemrepo;
 
-         Authentication auth=SecurityContextHolder.getContext().getAuthentication();
-        int userid=(Integer)auth.getDetails();
+    @org.springframework.transaction.annotation.Transactional
+    public String getPlaceOrder(OrdersDto obj) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        int userid = (Integer) auth.getDetails();
 
-        Optional<UserEntity> db=userrepo.findById(userid);
-        if(db.isEmpty()){
+        if (obj == null || obj.getOrders() == null || obj.getOrders().isEmpty()) {
+            return "No order items provided";
+        }
+
+        Optional<UserEntity> db = userrepo.findById(userid);
+        if (db.isEmpty()) {
             return "user id doesnot exist";
         }
-             OrderList oobj=new OrderList();
 
-                oobj.setUserid(userid);
-             oobj.setDelivery(LocalDateTime.now().plusDays(7));
-            oobj.setOrderedAt(LocalDateTime.now());
-            oobj.setStatus("placed");
-            oobj.setShippingAdd(db.get().getShippingAdd());
-            oobj.setMobile(db.get().getMobile());
-
-            
-            OrderList savedobj=orderlistrepo.save(oobj);
-
-            int totalamount=0;
-            for(ProductsDto o: obj.getOrders()){
-              OrderItemList oil=new OrderItemList();
-              ProductEntity dbob=prorepo.findById(o.getProductId()).orElse(null);
-              if(dbob==null){
-                return "product doesnot exist";
-               }
-            if(o.getQuantity()>dbob.getStock()){
-                return "insufficient stock";
-
+        // 1. Pre-validate ALL items before making any DB changes
+        Map<Integer, ProductEntity> productMap = new HashMap<>();
+        for (ProductsDto o : obj.getOrders()) {
+            if (o.getQuantity() <= 0) {
+                return "Invalid quantity for product ID: " + o.getProductId();
             }
+            ProductEntity product = prorepo.findById(o.getProductId()).orElse(null);
+            if (product == null) {
+                return "product doesnot exist with ID: " + o.getProductId();
+            }
+            if (o.getQuantity() > product.getStock()) {
+                return "insufficient stock for product: " + product.getProductName();
+            }
+            productMap.put(o.getProductId(), product);
+        }
 
+        // 2. Create Order
+        OrderList oobj = new OrderList();
+        oobj.setUserid(userid);
+        oobj.setDelivery(LocalDateTime.now().plusDays(7));
+        oobj.setOrderedAt(LocalDateTime.now());
+        oobj.setStatus("placed");
+        oobj.setShippingAdd(db.get().getShippingAdd());
+        oobj.setMobile(db.get().getMobile());
+
+        OrderList savedobj = orderlistrepo.save(oobj);
+
+        int totalamount = 0;
+        for (ProductsDto o : obj.getOrders()) {
+            ProductEntity dbob = productMap.get(o.getProductId());
+
+            OrderItemList oil = new OrderItemList();
             oil.setUserId(String.valueOf(userid));
             oil.setProductId(String.valueOf(dbob.getProductId()));
             oil.setQuantity(o.getQuantity());
-            oil.setSubTotal(dbob.getProductPrice()*o.getQuantity());
+            oil.setSubTotal(dbob.getProductPrice() * o.getQuantity());
             oil.setOrderId(savedobj.getOrderId());
             oil.setProductPrice(dbob.getProductPrice());
-            
+            oil.setOrderedAt(LocalDateTime.now());
 
-            totalamount=totalamount+(dbob.getProductPrice()*o.getQuantity());
-            dbob.setStock(dbob.getStock()-o.getQuantity());
+            totalamount += (dbob.getProductPrice() * o.getQuantity());
 
+            // Deduct stock
+            dbob.setStock(dbob.getStock() - o.getQuantity());
             prorepo.save(dbob);
             orderitemrepo.save(oil);
+        }
 
+        savedobj.setTotalPrice(totalamount);
+        orderlistrepo.save(savedobj);
 
-
+        // 3. Clear user's cart after successful order placement
+        try {
+            cartitemrepo.deleteByUserid(userid);
+            Optional<Cart> userCart = cartrepo.findByUserid(userid);
+            if (userCart.isPresent()) {
+                Cart c = userCart.get();
+                c.setTotalPrice(0);
+                cartrepo.save(c);
             }
-            savedobj.setTotalPrice(totalamount);
-            orderlistrepo.save(savedobj);
+        } catch (Exception e) {
+            // Cart cleanup non-blocking
+        }
 
-            
-
-
-            
-
-            return "order placed successfully";
-
-            
-        
-        
+        return "order placed successfully";
     }
 
 

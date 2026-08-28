@@ -65,6 +65,33 @@ const routes: MockRoute[] = [
   // ── Auth ─────────────────────────────────────────
   {
     method: 'POST',
+    pattern: /^\/user\/register\/send-otp$/,
+    handler: async (_m, body) => {
+      const { email } = body as { email: string }
+      const existing = mockUsers.find((u) => u.email === email)
+      if (existing) return 'Email is already registered. Please sign in or use another email.'
+      const otp = '123456'
+      mockOtpStore.set(`reg_${email}`, { otp, exp: Date.now() + 5 * 60 * 1000, verified: false })
+      console.log(`[MOCK] Registration OTP for ${email}: ${otp}`)
+      return 'Verification OTP sent to your email! (Demo code: 123456)'
+    },
+  },
+  {
+    method: 'POST',
+    pattern: /^\/user\/register\/verify-otp$/,
+    handler: async (_m, body) => {
+      const { email, otp } = body as { email: string; otp: string }
+      const entry = mockOtpStore.get(`reg_${email}`)
+      if (!entry) return 'Please request an OTP first'
+      if (entry.otp === otp && Date.now() < entry.exp) {
+        entry.verified = true
+        return 'Email verified successfully! You can now complete your registration.'
+      }
+      return 'Invalid verification OTP'
+    },
+  },
+  {
+    method: 'POST',
     pattern: /^\/user\/register$/,
     handler: async (_m, body) => {
       const data = body as UserEntity
@@ -74,6 +101,7 @@ const routes: MockRoute[] = [
         ...data,
         userId: getNextUserId(),
         role: 'USER',
+        isVerified: true,
       }
       mockUsers.push(newUser)
       return `${newUser.name}  registered successfully! of ID  ${newUser.userId}`
@@ -330,22 +358,28 @@ const routes: MockRoute[] = [
     pattern: /^\/user\/decrementcart$/,
     handler: async (_m, body) => {
       const { pid, quantity } = body as IncredecreDto
-      if (quantity < 0) return 'provide positive values only'
+      if (quantity <= 0) return 'provide positive values only'
       const userid = getCurrentUserId()
       const product = mockProducts.find((p) => p.productId === pid)
       if (!product) throw new MockApiError('no product found', 500)
 
-      const items = mockCartItems.get(userid) ?? []
-      const item = items.find((i) => i.productId === pid)
-      if (!item) throw new MockApiError('no cart found', 500)
+      let items = mockCartItems.get(userid) ?? []
+      const itemIdx = items.findIndex((i) => i.productId === pid)
+      if (itemIdx === -1) throw new MockApiError('no cart found', 500)
 
-      item.quantity -= quantity
-      item.subtotal -= quantity * product.productPrice
+      const item = items[itemIdx]
+      if (item.quantity <= quantity) {
+        items.splice(itemIdx, 1)
+      } else {
+        item.quantity -= quantity
+        item.subtotal = item.quantity * product.productPrice
+      }
 
       const cart = mockCarts.get(userid)
       if (cart) {
-        cart.totalPrice -= quantity * product.productPrice
+        cart.totalPrice = items.reduce((sum, i) => sum + i.subtotal, 0)
       }
+      mockCartItems.set(userid, items)
       return 'successfully decremented items from cart'
     },
   },
@@ -395,9 +429,10 @@ const routes: MockRoute[] = [
         orderedAt: new Date().toISOString(),
       })
 
-      // Clear the cart after placing an order
-      mockCarts.delete(userid)
-      mockCartItems.delete(userid)
+      // Clear cart
+      mockCartItems.set(userid, [])
+      const cart = mockCarts.get(userid)
+      if (cart) cart.totalPrice = 0
 
       return 'order placed successfully'
     },

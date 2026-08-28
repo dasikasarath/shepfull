@@ -38,7 +38,8 @@ public class securityFilter extends OncePerRequestFilter {
         }
 
         String path = request.getRequestURI();
-        if (path.equals("/login") || path.equals("/user/register") || path.contains("/forgotpassword")) {
+        if (path.equals("/login") || path.startsWith("/user/register") || path.contains("/forgotpassword")
+            || path.startsWith("/oauth2/") || path.startsWith("/login/oauth2/") || path.startsWith("/oauth/")) {
             filterChain.doFilter(request, response);
             return;
         }

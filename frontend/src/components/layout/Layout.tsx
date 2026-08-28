@@ -14,6 +14,7 @@ import {
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import Button from '../ui/Button'
+import ProfileCompletionBanner from '../profile/ProfileCompletionBanner'
 
 const userLinks = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -126,6 +127,7 @@ export default function Layout() {
 
         <main className="flex-1 lg:pl-64">
           <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <ProfileCompletionBanner />
             <Outlet />
           </div>
         </main>
