@@ -40,7 +40,7 @@ public class userService {
     private BlocklistRepository brepo;
 
     @Autowired
-    private JavaMailSender mailSender;
+    private EmailService emailService;
 
     @Autowired
     private jwt jt;
@@ -92,12 +92,13 @@ public class userService {
 
         CompletableFuture.runAsync(() -> {
             try {
-                SimpleMailMessage msg = new SimpleMailMessage();
-                msg.setTo(email);
-                msg.setSubject("SHEPRENURE - Email Verification Code");
-                msg.setText("Welcome to Sheprenure!\n\nYour registration verification OTP is: " + otp + "\n\nThis OTP expires in 5 minutes. Please do not share it with anyone.");
-                mailSender.send(msg);
-                System.out.println("Verification OTP email sent successfully to " + email);
+                emailService.sendOtpEmail(
+                        email,
+                        String.valueOf(otp),
+                        "Email Verification Code",
+                        "Thank you for joining Sheprenure! Please use the OTP below to verify your email address.",
+                        5
+                );
             } catch (Exception e) {
                 System.err.println("Failed to send registration email to " + email + ": " + e.getMessage());
             }

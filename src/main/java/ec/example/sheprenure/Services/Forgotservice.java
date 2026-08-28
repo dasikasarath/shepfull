@@ -32,7 +32,7 @@ public class Forgotservice {
     private Forgotmailrepo frepo;
 
     @Autowired
-    private JavaMailSender ms;
+    private EmailService emailService;
 
     public String getGenerateOTP(String name){
         int otp;
@@ -68,12 +68,14 @@ else{
         String recipientEmail = dbuser.get().getEmail();
         CompletableFuture.runAsync(() -> {
             try {
-                SimpleMailMessage msg = new SimpleMailMessage();
-                msg.setTo(recipientEmail);
-                msg.setSubject("SHEPRENURE PASSWORD RESET");
-                msg.setText(String.valueOf(otp) + " don't share this to anyone (EXPIRES IN 3 MINS)");
-                ms.send(msg);
-                System.out.println("Password reset OTP email sent successfully to " + name);
+                emailService.sendOtpEmail(
+                        recipientEmail,
+                        String.valueOf(otp),
+                        "Password Reset Request",
+                        "We received a request to reset the password for account: <strong>" + name + "</strong>.",
+                        3
+                );
+                System.out.println("Password reset OTP email sent successfully to " + name + " (" + recipientEmail + ")");
             } catch (Exception e) {
                 System.err.println("Failed to send reset email to " + name + ": " + e.getMessage());
             }
