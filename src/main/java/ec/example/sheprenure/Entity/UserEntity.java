@@ -23,6 +23,7 @@ public class UserEntity {
     private String name;
     @NotBlank
     @Email
+    @Column(unique = true, nullable = false)
     private String email;
     private String password;
     private String pincode;

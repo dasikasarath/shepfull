@@ -51,8 +51,8 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
             name = email.split("@")[0];
         }
 
-        // 1. If user exists by email, return / use existing account
-        UserEntity user = userRepository.findByEmail(email).orElse(null);
+        // 1. If user exists by email, reuse existing account
+        UserEntity user = userRepository.findFirstByEmail(email).orElse(null);
 
         if (user == null) {
             // Check if username is already taken by someone else, make it unique if necessary
@@ -61,19 +61,24 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
                 finalName = name + "_" + (System.currentTimeMillis() % 10000);
             }
 
-            // 2. If it's a new email, create account based on OAuth data and hardcode role as USER
+            // 2. If it's a new email, create account based on OAuth data and set as verified USER
             user = new UserEntity();
             user.setEmail(email);
             user.setName(finalName);
             user.setRole("USER");
             user.setIsVerified(true);
             user = userRepository.save(user);
-        } else if (!Boolean.TRUE.equals(user.getIsVerified())) {
-            user.setIsVerified(true);
-            user = userRepository.save(user);
+        } else {
+            // 3. For existing user: check if user is verified before generating token
+            if (user.getIsVerified() == null || !user.getIsVerified()) {
+                String redirectUrl = cleanFrontendUrl + "/oauth/callback?error=" + 
+                    URLEncoder.encode("Please verify your email before logging in", StandardCharsets.UTF_8);
+                getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+                return;
+            }
         }
 
-        // Generate JWT token for user session
+        // Generate JWT token only when user is verified
         String token = jwtUtil.generateToken(user);
 
         // Redirect user to frontend with JWT token in query parameter

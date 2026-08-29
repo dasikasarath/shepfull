@@ -52,7 +52,7 @@ public class userService {
 
         if(dbobj!=null){
 
-            if(dbobj.getIsVerified() != null && !dbobj.getIsVerified()){
+            if(dbobj.getIsVerified() == null || !dbobj.getIsVerified()){
                 return "Please verify your email before logging in";
             }
 
