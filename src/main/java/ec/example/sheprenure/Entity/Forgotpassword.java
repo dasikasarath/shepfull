@@ -18,6 +18,7 @@ public class Forgotpassword {
     private String otp;
     private LocalDateTime exp;
     private boolean isverified;
+    private int attemptCount = 0;
 
     public boolean getIsverified(){return isverified;}
 

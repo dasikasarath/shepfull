@@ -96,7 +96,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         if ("POST".equalsIgnoreCase(method) && "/login".equals(path)) {
             return loginBuckets.computeIfAbsent(ip, k -> buildLoginBucket());
         }
-        if ("POST".equalsIgnoreCase(method) && "/user/register".equals(path)) {
+        // Cover /user/register, /user/register/send-otp, /user/register/verify-otp
+        if ("POST".equalsIgnoreCase(method) && path.startsWith("/user/register")) {
             return registerBuckets.computeIfAbsent(ip, k -> buildRegisterBucket());
         }
         if (path.startsWith("/forgotpassword/")) {

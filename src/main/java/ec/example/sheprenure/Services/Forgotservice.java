@@ -61,6 +61,7 @@ else{
     reobj.setIsverified(false);
     reobj.setExp(LocalDateTime.now().plusMinutes(3));
     reobj.setOtp(String.valueOf(otp));
+    reobj.setAttemptCount(0); // Reset lockout counter when a new OTP is issued
     frepo.save(reobj);
 }
 
@@ -94,12 +95,27 @@ public String verifyotp(VerifyotpDto verifyy){
         return "get otp first";
     }
     Forgotpassword dbb=dbobj.get();
+
+    // Lock out after 5 failed attempts to prevent brute-force
+    if(dbb.getAttemptCount() >= 5){
+        frepo.deleteByName(verifyy.getName());
+        return "Too many failed attempts. Please request a new OTP.";
+    }
+
     if(dbb.getOtp().equals(verifyy.getOtp()) && LocalDateTime.now().isBefore(dbb.getExp())){
         dbb.setIsverified(true);
+        dbb.setAttemptCount(0);
         frepo.save(dbb);
         return "verification successfull now you can change the password";
     }
-    return "invalid otp";
+
+    // Increment failure counter and save
+    dbb.setAttemptCount(dbb.getAttemptCount() + 1);
+    frepo.save(dbb);
+    int remaining = 5 - dbb.getAttemptCount();
+    return remaining > 0
+        ? "invalid otp. " + remaining + " attempt(s) remaining."
+        : "Too many failed attempts. Please request a new OTP.";
 }
 
 @Transactional
