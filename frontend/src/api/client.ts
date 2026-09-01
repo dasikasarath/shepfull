@@ -12,10 +12,6 @@ export class ApiClientError extends Error {
   }
 }
 
-function getToken(): string | null {
-  return localStorage.getItem('token')
-}
-
 async function parseError(response: Response): Promise<string> {
   try {
     const text = await response.text()
@@ -40,16 +36,9 @@ export function isMockMode(): boolean {
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
-  auth = true,
+  _auth = true,
 ): Promise<T> {
   const headers = new Headers(options.headers)
-
-  if (auth) {
-    const token = getToken()
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`)
-    }
-  }
 
   if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
@@ -61,6 +50,7 @@ export async function apiRequest<T>(
       const response = await fetch(`${BASE_URL}${path}`, {
         ...options,
         headers,
+        credentials: 'include',
       })
 
       // Vite proxy returns 502 when the backend is unreachable.

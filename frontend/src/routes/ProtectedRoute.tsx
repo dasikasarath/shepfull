@@ -7,7 +7,11 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ requireAdmin = false }: ProtectedRouteProps) {
-  const { isAuthenticated, isAdmin } = useAuth()
+  const { isAuthenticated, isAdmin, loading } = useAuth()
+
+  if (loading) {
+    return <LoadingSpinner fullPage label="Checking authentication..." />
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
@@ -25,7 +29,11 @@ export default function ProtectedRoute({ requireAdmin = false }: ProtectedRouteP
 }
 
 export function PublicOnlyRoute() {
-  const { isAuthenticated, isAdmin } = useAuth()
+  const { isAuthenticated, isAdmin, loading } = useAuth()
+
+  if (loading) {
+    return <LoadingSpinner fullPage label="Checking authentication..." />
+  }
 
   if (isAuthenticated) {
     return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />

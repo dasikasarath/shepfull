@@ -1,5 +1,6 @@
-import { apiText } from './client'
+import { apiRequest, apiText } from './client'
 import type {
+  AuthUser,
   PasswordsetDto,
   UserDto,
   UserEntity,
@@ -30,11 +31,17 @@ export async function register(data: UserEntity): Promise<string> {
   }, false)
 }
 
-export async function login(data: UserDto): Promise<string> {
-  return apiText('/login', {
+export async function login(data: UserDto): Promise<AuthUser> {
+  return apiRequest<AuthUser>('/login', {
     method: 'POST',
     body: JSON.stringify(data),
   }, false)
+}
+
+export async function getCurrentUser(): Promise<AuthUser> {
+  return apiRequest<AuthUser>('/auth/me', {
+    method: 'GET',
+  }, true)
 }
 
 export async function logout(): Promise<string> {

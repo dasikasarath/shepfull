@@ -10,14 +10,13 @@ import { GOOGLE_AUTH_URL } from '../api/auth'
 export default function OAuthCallbackPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { loginWithToken } = useAuth()
+  const { refreshUser } = useAuth()
   const { showToast } = useToast()
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState<string>('')
 
   useEffect(() => {
-    const token = searchParams.get('token')
     const error = searchParams.get('error')
 
     if (error) {
@@ -27,28 +26,27 @@ export default function OAuthCallbackPage() {
       return
     }
 
-    if (token) {
-      try {
-        const user = loginWithToken(token)
-        setStatus('success')
-        showToast(`Welcome back, ${user.name}!`, 'success')
-
-        const timer = setTimeout(() => {
-          navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard', { replace: true })
-        }, 1200)
-
-        return () => clearTimeout(timer)
-      } catch (err) {
+    refreshUser()
+      .then((user) => {
+        if (user) {
+          setStatus('success')
+          showToast(`Welcome back, ${user.name}!`, 'success')
+          const timer = setTimeout(() => {
+            navigate(user.role === 'ADMIN' ? '/admin' : '/dashboard', { replace: true })
+          }, 1000)
+          return () => clearTimeout(timer)
+        } else {
+          setStatus('error')
+          setErrorMessage('Could not establish a valid session from Google authentication')
+        }
+      })
+      .catch((err) => {
         setStatus('error')
-        const msg = err instanceof Error ? err.message : 'Failed to authenticate token'
+        const msg = err instanceof Error ? err.message : 'Failed to authenticate session'
         setErrorMessage(msg)
         showToast(msg, 'error')
-      }
-    } else {
-      setStatus('error')
-      setErrorMessage('No authentication token received from Google')
-    }
-  }, [searchParams, loginWithToken, navigate, showToast])
+      })
+  }, [searchParams, refreshUser, navigate, showToast])
 
   const handleRetry = () => {
     window.location.href = GOOGLE_AUTH_URL

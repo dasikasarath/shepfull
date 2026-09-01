@@ -27,6 +27,9 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
+import ec.example.sheprenure.CookieUtils;
+import jakarta.servlet.http.HttpServletResponse;
+
 @Service //no auth needed//
 public class userService {
 
@@ -44,6 +47,27 @@ public class userService {
 
     @Autowired
     private jwt jt;
+
+    public UserEntity authenticateUser(UserDto obj) {
+        if (obj == null || obj.getName() == null || obj.getPassword() == null) {
+            throw new IllegalArgumentException("Username and password are required");
+        }
+
+        UserEntity dbobj = urepo.findByName(obj.getName().trim()).orElse(null);
+        if (dbobj == null) {
+            throw new IllegalArgumentException("Incorrect credentials!");
+        }
+
+        if (dbobj.getIsVerified() == null || !dbobj.getIsVerified()) {
+            throw new IllegalStateException("Please verify your email before logging in");
+        }
+
+        if (!obj.getPassword().equals(dbobj.getPassword())) {
+            throw new IllegalArgumentException("Incorrect password");
+        }
+
+        return dbobj;
+    }
 
     public String logintok(UserDto obj){
 
@@ -163,23 +187,45 @@ public class userService {
     }
 
 
-public String logout(HttpServletRequest req){
-    String header=req.getHeader("Authorization");
-    String token=null;
-    Instant exp;
+    public AuthUserDto getCurrentAuthUser() {
+        Authentication det = SecurityContextHolder.getContext().getAuthentication();
+        if (det == null || det.getDetails() == null || !(det.getDetails() instanceof Integer)) {
+            throw new RuntimeException("User not authenticated");
+        }
+        int userid = (Integer) det.getDetails();
+        UserEntity ent = urepo.findById(userid).orElseThrow(() -> new RuntimeException("User not found"));
+        return new AuthUserDto(ent.getUserId(), ent.getName(), ent.getEmail(), ent.getRole());
+    }
 
-    if(header!=null && header.startsWith("Bearer ")){
-        token=header.substring(7);
-        exp=jt.ExtractExpir(token).toInstant();
+    public String logout(HttpServletRequest req, HttpServletResponse resp) {
+        String token = CookieUtils.getJwtFromCookies(req);
+        if (token == null || token.isBlank()) {
+            String header = req.getHeader("Authorization");
+            if (header != null && header.startsWith("Bearer ")) {
+                token = header.substring(7);
+            }
+        }
 
-        Blocklist b=new Blocklist();
-        b.setExpirey(exp);
-        b.setToken(token);
-        brepo.save(b);
+        if (token != null && !token.isBlank() && jt.validate(token)) {
+            try {
+                Instant exp = jt.ExtractExpir(token).toInstant();
+                Blocklist b = new Blocklist();
+                b.setExpirey(exp);
+                b.setToken(token);
+                brepo.save(b);
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (resp != null) {
+            CookieUtils.addCookieToResponse(resp, CookieUtils.createCleanJwtCookie(false));
+        }
+
         return "Logged out successfully!";
     }
-    return "failed to logout";
 
+    public String logout(HttpServletRequest req) {
+        return logout(req, null);
     }
 
     

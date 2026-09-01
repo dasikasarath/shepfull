@@ -81,8 +81,11 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
         // Generate JWT token only when user is verified
         String token = jwtUtil.generateToken(user);
 
-        // Redirect user to frontend with JWT token in query parameter
-        String redirectUrl = cleanFrontendUrl + "/oauth/callback?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+        // Set HttpOnly cookie
+        CookieUtils.addCookieToResponse(response, CookieUtils.createJwtCookie(token, false));
+
+        // Redirect user to frontend without exposing token in query parameter
+        String redirectUrl = cleanFrontendUrl + "/oauth/callback";
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }

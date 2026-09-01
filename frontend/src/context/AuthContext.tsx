@@ -1,91 +1,86 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { AuthUser } from '../types'
-import { parseJwt } from '../utils/jwt'
 import * as authApi from '../api/auth'
-import { isJwtToken } from '../utils/jwt'
 
 interface AuthContextValue {
   user: AuthUser | null
-  token: string | null
+  loading: boolean
   isAuthenticated: boolean
   isAdmin: boolean
   login: (name: string, password: string) => Promise<AuthUser>
-  loginWithToken: (token: string) => AuthUser
+  loginWithUser: (user: AuthUser) => void
   logout: () => Promise<void>
+  refreshUser: () => Promise<AuthUser | null>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function loadStoredAuth(): { token: string | null; user: AuthUser | null } {
-  const token = localStorage.getItem('token')
-  if (!token) return { token: null, user: null }
-  const user = parseJwt(token)
-  if (!user) {
-    localStorage.removeItem('token')
-    return { token: null, user: null }
-  }
-  return { token, user }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const stored = loadStoredAuth()
-  const [token, setToken] = useState<string | null>(stored.token)
-  const [user, setUser] = useState<AuthUser | null>(stored.user)
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const loginWithToken = useCallback((rawToken: string) => {
-    if (!isJwtToken(rawToken)) {
-      throw new Error('Invalid token received from authentication')
+  const refreshUser = useCallback(async (): Promise<AuthUser | null> => {
+    try {
+      const currentUser = await authApi.getCurrentUser()
+      setUser(currentUser)
+      return currentUser
+    } catch {
+      setUser(null)
+      return null
     }
-    const parsed = parseJwt(rawToken)
-    if (!parsed) {
-      throw new Error('Could not parse user information from token')
+  }, [])
+
+  useEffect(() => {
+    let isMounted = true
+    authApi
+      .getCurrentUser()
+      .then((currentUser) => {
+        if (isMounted) setUser(currentUser)
+      })
+      .catch(() => {
+        if (isMounted) setUser(null)
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false)
+      })
+
+    return () => {
+      isMounted = false
     }
-    localStorage.setItem('token', rawToken)
-    setToken(rawToken)
-    setUser(parsed)
-    return parsed
+  }, [])
+
+  const loginWithUser = useCallback((userData: AuthUser) => {
+    setUser(userData)
   }, [])
 
   const login = useCallback(async (name: string, password: string) => {
-    const response = await authApi.login({ name, password })
-    if (!isJwtToken(response)) {
-      throw new Error(response)
-    }
-    const parsed = parseJwt(response)
-    if (!parsed) {
-      throw new Error('Invalid token received')
-    }
-    localStorage.setItem('token', response)
-    setToken(response)
-    setUser(parsed)
-    return parsed
+    const authUser = await authApi.login({ name, password })
+    setUser(authUser)
+    return authUser
   }, [])
 
   const logout = useCallback(async () => {
     try {
-      if (token) {
-        await authApi.logout()
-      }
+      await authApi.logout()
     } catch {
-      // Clear local session even if backend logout fails
+      // Clear user even if network request fails
     } finally {
-      localStorage.removeItem('token')
-      setToken(null)
       setUser(null)
     }
-  }, [token])
+  }, [])
 
   const value = useMemo(
     () => ({
       user,
-      token,
-      isAuthenticated: !!token && !!user,
+      loading,
+      isAuthenticated: !!user,
       isAdmin: user?.role === 'ADMIN',
       login,
-      loginWithToken,
+      loginWithUser,
       logout,
+      refreshUser,
     }),
-    [user, token, login, loginWithToken, logout],
+    [user, loading, login, loginWithUser, logout, refreshUser],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -96,3 +91,4 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
 }
+

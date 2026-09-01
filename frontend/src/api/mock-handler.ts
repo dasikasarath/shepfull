@@ -19,7 +19,6 @@ import type {
   VerifyotpDto,
   PasswordsetDto,
 } from '../types'
-import { parseJwt } from '../utils/jwt'
 import {
   mockUsers,
   mockProducts,
@@ -28,20 +27,18 @@ import {
   mockOrders,
   mockOrderItems,
   mockOtpStore,
-  createMockJwt,
   getNextProductId,
   getNextCartItemId,
   getNextUserId,
   getNextOrderId,
 } from './mock-data'
 
-// ── Helper: Get current user from token ──────────────────────────
+let mockActiveUserId: number | null = 1 // Default to John Doe in mock mode if not logged out
+
+// ── Helper: Get current user ─────────────────────────────────────
 function getCurrentUser(): UserEntity | null {
-  const token = localStorage.getItem('token')
-  if (!token) return null
-  const parsed = parseJwt(token)
-  if (!parsed) return null
-  return mockUsers.find((u) => u.userId === parsed.id) ?? null
+  if (mockActiveUserId === null) return null
+  return mockUsers.find((u) => u.userId === mockActiveUserId) ?? null
 }
 
 function getCurrentUserId(): number {
@@ -63,6 +60,20 @@ interface MockRoute {
 
 const routes: MockRoute[] = [
   // ── Auth ─────────────────────────────────────────
+  {
+    method: 'GET',
+    pattern: /^\/auth\/me$/,
+    handler: async () => {
+      const user = getCurrentUser()
+      if (!user) throw new Error('Unauthorized')
+      return {
+        id: user.userId ?? 1,
+        name: user.name,
+        email: user.email,
+        role: (user.role as 'USER' | 'ADMIN') ?? 'USER',
+      }
+    },
+  },
   {
     method: 'POST',
     pattern: /^\/user\/register\/send-otp$/,
@@ -113,15 +124,24 @@ const routes: MockRoute[] = [
     handler: async (_m, body) => {
       const { name, password } = body as { name: string; password: string }
       const user = mockUsers.find((u) => u.name === name)
-      if (!user) return 'Incorrect credentials!'
-      if (user.password !== password) return 'Incorrect password'
-      return createMockJwt(user)
+      if (!user) throw new Error('Incorrect credentials!')
+      if (user.password !== password) throw new Error('Incorrect password')
+      mockActiveUserId = user.userId ?? 1
+      return {
+        id: user.userId ?? 1,
+        name: user.name,
+        email: user.email,
+        role: (user.role as 'USER' | 'ADMIN') ?? 'USER',
+      }
     },
   },
   {
     method: 'POST',
     pattern: /^\/logouts$/,
-    handler: async () => 'Logged out successfully!',
+    handler: async () => {
+      mockActiveUserId = null
+      return 'Logged out successfully!'
+    },
   },
 
   // ── Forgot Password ─────────────────────────────

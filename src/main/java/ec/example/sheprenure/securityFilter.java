@@ -44,15 +44,20 @@ public class securityFilter extends OncePerRequestFilter {
             return;
         }
 
-        String header = request.getHeader("Authorization");
-        String token = null;
+        String token = CookieUtils.getJwtFromCookies(request);
+
+        if (token == null || token.isBlank()) {
+            String header = request.getHeader("Authorization");
+            if (header != null && header.startsWith("Bearer ")) {
+                token = header.substring(7);
+            }
+        }
+
         String name = null;
         String role = null;
         int id = -1;
 
-        if (header != null && header.startsWith("Bearer ")) {
-            token = header.substring(7);
-
+        if (token != null && !token.isBlank()) {
             if (!jt.validate(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("invalid token");
