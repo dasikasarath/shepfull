@@ -23,11 +23,14 @@ public class Security {
     @Autowired
     private RateLimitingFilter rateLimitingFilter;
 
-    @Autowired
+    @Autowired(required = false)
     private OAuthSuccessHandler oAuthSuccessHandler;
 
-    @Autowired
+    @Autowired(required = false)
     private OAuthFailureHandler oAuthFailureHandler;
+
+    @Autowired(required = false)
+    private org.springframework.security.oauth2.client.registration.ClientRegistrationRepository clientRegistrationRepository;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -48,10 +51,17 @@ public class Security {
             .anyRequest().authenticated()
         );
 
-        http.oauth2Login(oauth2 -> oauth2
-            .successHandler(oAuthSuccessHandler)
-            .failureHandler(oAuthFailureHandler)
-        );
+        if (clientRegistrationRepository != null) {
+            http.oauth2Login(oauth2 -> {
+                oauth2.clientRegistrationRepository(clientRegistrationRepository);
+                if (oAuthSuccessHandler != null) {
+                    oauth2.successHandler(oAuthSuccessHandler);
+                }
+                if (oAuthFailureHandler != null) {
+                    oauth2.failureHandler(oAuthFailureHandler);
+                }
+            });
+        }
 
         return http.build();
     }

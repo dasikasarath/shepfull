@@ -218,7 +218,10 @@ public class userService {
         }
 
         if (resp != null) {
-            CookieUtils.addCookieToResponse(resp, CookieUtils.createCleanJwtCookie(false));
+            boolean isSecure = (req != null && req.isSecure())
+                    || (req != null && "https".equalsIgnoreCase(req.getHeader("X-Forwarded-Proto")))
+                    || (req != null && req.getHeader("Origin") != null && req.getHeader("Origin").startsWith("https://"));
+            CookieUtils.addCookieToResponse(resp, CookieUtils.createCleanJwtCookie(isSecure));
         }
 
         return "Logged out successfully!";

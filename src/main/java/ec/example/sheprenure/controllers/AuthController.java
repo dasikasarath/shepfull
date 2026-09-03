@@ -46,11 +46,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> postlogin(@RequestBody UserDto obj, HttpServletResponse response) {
+    public ResponseEntity<?> postlogin(@RequestBody UserDto obj, HttpServletRequest request, HttpServletResponse response) {
         try {
             UserEntity user = userv.authenticateUser(obj);
             String token = jwtUtil.generateToken(user);
-            ResponseCookie cookie = CookieUtils.createJwtCookie(token, false);
+            boolean isSecure = request.isSecure() 
+                    || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"))
+                    || (request.getHeader("Origin") != null && request.getHeader("Origin").startsWith("https://"));
+            ResponseCookie cookie = CookieUtils.createJwtCookie(token, isSecure);
             CookieUtils.addCookieToResponse(response, cookie);
             AuthUserDto authUser = new AuthUserDto(user.getUserId(), user.getName(), user.getEmail(), user.getRole());
             return ResponseEntity.ok(authUser);

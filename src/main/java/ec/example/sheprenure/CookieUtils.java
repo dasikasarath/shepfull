@@ -21,7 +21,7 @@ public class CookieUtils {
                 .secure(secure)
                 .path("/")
                 .maxAge(COOKIE_MAX_AGE_SECONDS)
-                .sameSite("Lax")
+                .sameSite(secure ? "None" : "Lax")
                 .build();
     }
 
@@ -34,7 +34,7 @@ public class CookieUtils {
                 .secure(secure)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite(secure ? "None" : "Lax")
                 .build();
     }
 
