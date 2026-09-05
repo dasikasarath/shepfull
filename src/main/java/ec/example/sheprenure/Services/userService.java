@@ -1,13 +1,10 @@
 package ec.example.sheprenure.Services;
 
-import java.net.http.HttpRequest;
 import java.time.Instant;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import ec.example.sheprenure.Repository.BlocklistRepository;
@@ -24,8 +21,6 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 
 import ec.example.sheprenure.CookieUtils;
 import jakarta.servlet.http.HttpServletResponse;

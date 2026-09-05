@@ -13,31 +13,51 @@ public class CookieUtils {
     public static final long COOKIE_MAX_AGE_SECONDS = 60 * 60; // 1 hour (matching JWT validity)
 
     /**
-     * Creates an HttpOnly ResponseCookie with the JWT token.
+     * Creates an HttpOnly JWT cookie.
+     *
+     * When isSecure=true (HTTPS/production on Render):
+     *   → SameSite=None; Secure=true  (required for cross-origin cookie sending)
+     *
+     * When isSecure=false (local HTTP development):
+     *   → SameSite=Lax; Secure=false  (most compatible for same-origin dev)
      */
-    public static ResponseCookie createJwtCookie(String token, boolean secure) {
+    public static ResponseCookie createJwtCookie(String token, boolean isSecure) {
         return ResponseCookie.from(COOKIE_NAME, token)
                 .httpOnly(true)
-                .secure(secure)
+                .secure(isSecure)
                 .path("/")
                 .maxAge(COOKIE_MAX_AGE_SECONDS)
-                .sameSite(secure ? "None" : "Lax")
-                .partitioned(true)
+                .sameSite(isSecure ? "None" : "Lax")
                 .build();
     }
 
     /**
-     * Creates an HttpOnly ResponseCookie to delete the JWT cookie (Max-Age=0).
+     * Creates an HttpOnly JWT cookie (always secure — use for HTTPS-only deployments).
      */
-    public static ResponseCookie createCleanJwtCookie(boolean secure) {
+    public static ResponseCookie createJwtCookie(String token) {
+        return createJwtCookie(token, true);
+    }
+
+    /**
+     * Creates an HttpOnly cookie that clears the JWT (Max-Age=0) — for logout.
+     *
+     * SameSite must match the original cookie to correctly clear it in the browser.
+     */
+    public static ResponseCookie createCleanJwtCookie(boolean isSecure) {
         return ResponseCookie.from(COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(secure)
+                .secure(isSecure)
                 .path("/")
                 .maxAge(0)
-                .sameSite(secure ? "None" : "Lax")
-                .partitioned(true)
+                .sameSite(isSecure ? "None" : "Lax")
                 .build();
+    }
+
+    /**
+     * Creates an HttpOnly cookie that clears the JWT (always secure variant).
+     */
+    public static ResponseCookie createCleanJwtCookie() {
+        return createCleanJwtCookie(true);
     }
 
     /**
