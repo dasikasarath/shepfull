@@ -10,9 +10,12 @@ export default defineConfig({
       '/logouts': 'http://localhost:8080',
       '/user': 'http://localhost:8080',
       '/admin': 'http://localhost:8080',
+      '/auth': 'http://localhost:8080',
       '/forgotpassword': 'http://localhost:8080',
       '/rechangepassword': 'http://localhost:8080',
       '/updateprofile': 'http://localhost:8080',
+      '/oauth2': 'http://localhost:8080',
+      '/login/oauth2': 'http://localhost:8080',
     },
   },
 })

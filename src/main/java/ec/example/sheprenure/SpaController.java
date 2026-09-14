@@ -1,7 +1,7 @@
 package ec.example.sheprenure;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 
 /**
  * SPA (Single Page Application) controller.
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class SpaController {
 
-    @RequestMapping(value = {
+    @GetMapping(value = {
         "/",
         "/login",
         "/register",
