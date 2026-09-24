@@ -95,9 +95,8 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
                 || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
         CookieUtils.addCookieToResponse(response, CookieUtils.createJwtCookie(token, isSecure));
 
-        // Redirect user to frontend with token parameter as a resilient fallback
-        // (in case browser blocks cross-origin cookies in dev or production)
-        String redirectUrl = cleanFrontendUrl + "/oauth/callback?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+        // Redirect user to frontend cleanly without exposing token in URL (token is securely stored in HttpOnly cookie)
+        String redirectUrl = cleanFrontendUrl + "/oauth/callback";
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }
