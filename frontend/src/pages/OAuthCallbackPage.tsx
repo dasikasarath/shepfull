@@ -18,7 +18,6 @@ export default function OAuthCallbackPage() {
 
   useEffect(() => {
     const error = searchParams.get('error')
-    const token = searchParams.get('token')
 
     if (error) {
       setStatus('error')
@@ -27,10 +26,9 @@ export default function OAuthCallbackPage() {
       return
     }
 
-    if (token) {
-      localStorage.setItem('jwt_token', token)
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
+    // Ensure no legacy tokens remain in localStorage (pure HttpOnly cookie auth)
+    localStorage.removeItem('jwt_token')
+    localStorage.removeItem('token')
 
     refreshUser()
       .then((user) => {

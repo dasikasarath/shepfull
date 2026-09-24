@@ -43,6 +43,9 @@ public class userService {
     @Autowired
     private jwt jt;
 
+    @Autowired
+    private AuthHelper authHelper;
+
     public UserEntity authenticateUser(UserDto obj) {
         if (obj == null || obj.getName() == null || obj.getPassword() == null) {
             throw new IllegalArgumentException("Username and password are required");
@@ -183,12 +186,7 @@ public class userService {
 
 
     public AuthUserDto getCurrentAuthUser() {
-        Authentication det = SecurityContextHolder.getContext().getAuthentication();
-        if (det == null || det.getDetails() == null || !(det.getDetails() instanceof Integer)) {
-            throw new RuntimeException("User not authenticated");
-        }
-        int userid = (Integer) det.getDetails();
-        UserEntity ent = urepo.findById(userid).orElseThrow(() -> new RuntimeException("User not found"));
+        UserEntity ent = authHelper.getCurrentUser();
         return new AuthUserDto(ent.getUserId(), ent.getName(), ent.getEmail(), ent.getRole());
     }
 
@@ -216,7 +214,7 @@ public class userService {
             boolean isSecure = (req != null && req.isSecure())
                     || (req != null && "https".equalsIgnoreCase(req.getHeader("X-Forwarded-Proto")))
                     || (req != null && req.getHeader("Origin") != null && req.getHeader("Origin").startsWith("https://"));
-            CookieUtils.addCookieToResponse(resp, CookieUtils.createCleanJwtCookie(isSecure));
+            CookieUtils.clearAuthCookies(resp, isSecure);
         }
 
         return "Logged out successfully!";
@@ -231,27 +229,21 @@ public class userService {
 ///profiles///
 
 
-public ProfileDto getProfilee(){
-    Authentication det=SecurityContextHolder.getContext().getAuthentication();
-      int userid=(Integer)det.getDetails();
-     UserEntity ent=urepo.findById(userid).orElseThrow(()->new RuntimeException("user not existed"));
-    
-        ProfileDto obj=new ProfileDto();
-        obj.setEmail(ent.getEmail());
-        obj.setName(ent.getName());
-        obj.setMobile(ent.getMobile());
-        obj.setPincode(ent.getPincode());
-        obj.setShippingAdd(ent.getShippingAdd());
-
-        return obj;
-     }
+public ProfileDto getProfilee() {
+    UserEntity ent = authHelper.getCurrentUser();
+    ProfileDto obj = new ProfileDto();
+    obj.setEmail(ent.getEmail());
+    obj.setName(ent.getName());
+    obj.setMobile(ent.getMobile());
+    obj.setPincode(ent.getPincode());
+    obj.setShippingAdd(ent.getShippingAdd());
+    return obj;
+}
 
 
-public String rechange(PasswordDto reqobj){
-    Authentication auth=SecurityContextHolder.getContext().getAuthentication();
-    int userid=(Integer) auth.getDetails();
-    UserEntity dbobj=urepo.findById(userid).orElseThrow(()->new RuntimeException("failed to change"));
-    if(dbobj.getPassword().equals(reqobj.getCurrpass())){
+public String rechange(PasswordDto reqobj) {
+    UserEntity dbobj = authHelper.getCurrentUser();
+    if (dbobj.getPassword() != null && dbobj.getPassword().equals(reqobj.getCurrpass())) {
         dbobj.setPassword(reqobj.getPassword());
         urepo.save(dbobj);
         return "password changed successfully";
@@ -259,26 +251,23 @@ public String rechange(PasswordDto reqobj){
     return "failed to change";
 }
 
-public String updateUse(UpdateProfileDto reqobj){
-    Authentication auth=SecurityContextHolder.getContext().getAuthentication();
-    int userid=(Integer) auth.getDetails();
-     UserEntity dbobj=urepo.findById(userid).orElseThrow(()->new RuntimeException("failed to change"));
-     if(reqobj.getAddress()!=null && !reqobj.getAddress().isBlank()){
+public String updateUse(UpdateProfileDto reqobj) {
+    UserEntity dbobj = authHelper.getCurrentUser();
+    if (reqobj.getAddress() != null && !reqobj.getAddress().isBlank()) {
         dbobj.setShippingAdd(reqobj.getAddress());
-     }
-     if(reqobj.getEmail()!=null && !reqobj.getEmail().isBlank()){
+    }
+    if (reqobj.getEmail() != null && !reqobj.getEmail().isBlank()) {
         dbobj.setEmail(reqobj.getEmail());
-     }
-     if(reqobj.getPincode()!=null && !reqobj.getPincode().isBlank()){
+    }
+    if (reqobj.getPincode() != null && !reqobj.getPincode().isBlank()) {
         dbobj.setPincode(reqobj.getPincode());
-     }
-     if(reqobj.getMobile()!=null && !reqobj.getMobile().isBlank()){
+    }
+    if (reqobj.getMobile() != null && !reqobj.getMobile().isBlank()) {
         dbobj.setMobile(reqobj.getMobile());
-     }
+    }
 
-     urepo.save(dbobj);
-
-     return "updated successfully";
+    urepo.save(dbobj);
+    return "updated successfully";
 }
 
 

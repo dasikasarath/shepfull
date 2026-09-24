@@ -8,7 +8,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import ec.example.sheprenure.Entity.UserEntity;
 import ec.example.sheprenure.Repository.BlocklistRepository;
+import ec.example.sheprenure.Repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +25,9 @@ import java.util.*;
 public class securityFilter extends OncePerRequestFilter {
     @Autowired
     private BlocklistRepository brepo;
+
+    @Autowired
+    private UserRepository urepo;
 
     @Autowired
     private jwt jt;
@@ -81,48 +86,79 @@ public class securityFilter extends OncePerRequestFilter {
 
         String name = null;
         String role = null;
+        String email = null;
         int id = -1;
 
         if (token != null && !token.isBlank()) {
             if (!jt.validate(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("invalid token");
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Invalid or expired token. Please log in.\"}");
                 return;
             }
 
             // blacklist check
             if (brepo.existsByToken(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("login first");
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Session has expired. Please log in again.\"}");
                 return;
             }
 
             name = jt.extractUserName(token);
             id = jt.extractId(token);
+            email = jt.extractEmail(token);
             role = jt.ExtractRole(token);
         } else {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("token missing");
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication token is missing. Please log in.\"}");
             return;
         }
 
-        if (name != null && id != -1 && role != null) {
-            List<GrantedAuthority> roles = new ArrayList<>();
-            String normalizedRole = role.trim().toUpperCase();
-            if (normalizedRole.startsWith("ROLE_")) {
-                roles.add(new SimpleGrantedAuthority(normalizedRole));
-            } else {
-                roles.add(new SimpleGrantedAuthority("ROLE_" + normalizedRole));
+        // Validate and resolve user against database to guarantee existence
+        Optional<UserEntity> userOpt = Optional.empty();
+
+        if (id > 0) {
+            userOpt = urepo.findById(id);
+        }
+
+        if (userOpt.isEmpty() && email != null && !email.isBlank()) {
+            userOpt = urepo.findByEmailIgnoreCase(email.trim());
+        }
+
+        if (userOpt.isEmpty() && name != null && !name.isBlank()) {
+            userOpt = urepo.findByNameIgnoreCase(name.trim());
+            if (userOpt.isEmpty()) {
+                userOpt = urepo.findByEmailIgnoreCase(name.trim());
             }
+        }
 
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(name, null, roles);
-            auth.setDetails(id);
-            SecurityContextHolder.getContext().setAuthentication(auth);
-        } else {
+        if (userOpt.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("invalid token");
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"User account not found. Please log in again.\"}");
             return;
         }
+
+        UserEntity user = userOpt.get();
+        id = user.getUserId();
+        name = user.getName();
+        if (role == null || role.isBlank()) {
+            role = user.getRole() != null ? user.getRole() : "USER";
+        }
+
+        List<GrantedAuthority> roles = new ArrayList<>();
+        String normalizedRole = role.trim().toUpperCase();
+        if (normalizedRole.startsWith("ROLE_")) {
+            roles.add(new SimpleGrantedAuthority(normalizedRole));
+        } else {
+            roles.add(new SimpleGrantedAuthority("ROLE_" + normalizedRole));
+        }
+
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(name, null, roles);
+        auth.setDetails(id);
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
         filterChain.doFilter(request, response);
     }

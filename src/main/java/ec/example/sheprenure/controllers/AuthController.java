@@ -53,8 +53,7 @@ public class AuthController {
             boolean isSecure = request.isSecure() 
                     || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"))
                     || (request.getHeader("Origin") != null && request.getHeader("Origin").startsWith("https://"));
-            ResponseCookie cookie = CookieUtils.createJwtCookie(token, isSecure);
-            CookieUtils.addCookieToResponse(response, cookie);
+            CookieUtils.addAuthCookies(response, token, isSecure);
             AuthUserDto authUser = new AuthUserDto(user.getUserId(), user.getName(), user.getEmail(), user.getRole());
             return ResponseEntity.ok(authUser);
         } catch (IllegalArgumentException | IllegalStateException e) {

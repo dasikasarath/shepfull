@@ -30,21 +30,23 @@ export default function CartPage() {
     setLoading(true)
     try {
       const [cartData, itemsData, allProducts, profData] = await Promise.all([
-        getCart(),
-        getCartItems(),
-        getAllProducts(),
+        getCart().catch(() => ({ cartid: 0, userid: 0, totalPrice: 0 })),
+        getCartItems().catch(() => []),
+        getAllProducts().catch(() => []),
         getProfile().catch(() => null),
       ])
       setCart(cartData)
-      setItems(itemsData)
+      setItems(itemsData || [])
       setUserProfile(profData)
       const map: Record<number, ProductEntity> = {}
-      allProducts.forEach((p) => { map[p.productId] = p })
+      if (Array.isArray(allProducts)) {
+        allProducts.forEach((p) => { map[p.productId] = p })
+      }
       setProducts(map)
     } catch (err) {
-      setCart(null)
+      setCart({ cartid: 0, userid: 0, totalPrice: 0 })
       setItems([])
-      if (!(err instanceof Error && err.message.includes('no cart'))) {
+      if (!(err instanceof Error && (err.message.includes('no cart') || err.message.includes('404')))) {
         showToast(err instanceof Error ? err.message : 'Failed to load cart', 'error')
       }
     } finally {

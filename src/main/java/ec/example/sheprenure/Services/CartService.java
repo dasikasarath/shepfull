@@ -27,10 +27,12 @@ public class CartService {
     @Autowired
     private CartItemRepository cirepo;
 
+    @Autowired
+    private AuthHelper authHelper;
+
     @Transactional
     public String addcart(CartDto obj) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        int userid = (Integer) auth.getDetails();
+        int userid = authHelper.getCurrentUserId();
 
         if (obj == null || obj.getItems() == null || obj.getItems().isEmpty()) {
             return "No items provided";
@@ -91,8 +93,7 @@ public class CartService {
 
 
     public Cart getEntireCart() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        int userid = (Integer) auth.getDetails();
+        int userid = authHelper.getCurrentUserId();
         return crepo.findByUserid(userid).orElseGet(() -> {
             Cart emptyCart = new Cart();
             emptyCart.setUserid(userid);
@@ -102,8 +103,7 @@ public class CartService {
     }
 
    public String rem(int pid){
-     Authentication auth =SecurityContextHolder.getContext().getAuthentication();
-    int userid=(Integer) auth.getDetails();
+    int userid = authHelper.getCurrentUserId();
     CartItem obj=cirepo.findByUseridAndProductId(userid,pid).orElseThrow(()->new RuntimeException("unable to find product"));
     int costminus=obj.getSubtotal();
     cirepo.deleteById(obj.getCartitemid());
@@ -130,8 +130,7 @@ public class CartService {
 
         ProductEntity prod = prepo.findById(pid).orElseThrow(() -> new RuntimeException("product not found"));
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        int userid = (Integer) auth.getDetails();
+        int userid = authHelper.getCurrentUserId();
 
         CartItem obj = cirepo.findByUseridAndProductId(userid, pid)
                 .orElseThrow(() -> new RuntimeException("no previous cart found"));
@@ -165,8 +164,7 @@ public class CartService {
             return "provide positive values only";
         }
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        int userid = (Integer) auth.getDetails();
+        int userid = authHelper.getCurrentUserId();
 
         ProductEntity prod = prepo.findById(pid).orElseThrow(() -> new RuntimeException("no product found"));
 

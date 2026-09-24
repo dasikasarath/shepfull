@@ -90,10 +90,10 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
         // Generate JWT token
         String token = jwtUtil.generateToken(user);
 
-        // Set HttpOnly cookie with secure flag on HTTPS
+        // Set HttpOnly cookies (both jwt_token and token)
         boolean isSecure = request.isSecure() || cleanFrontendUrl.startsWith("https://") 
                 || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
-        CookieUtils.addCookieToResponse(response, CookieUtils.createJwtCookie(token, isSecure));
+        CookieUtils.addAuthCookies(response, token, isSecure);
 
         // Redirect user to frontend cleanly without exposing token in URL (token is securely stored in HttpOnly cookie)
         String redirectUrl = cleanFrontendUrl + "/oauth/callback";

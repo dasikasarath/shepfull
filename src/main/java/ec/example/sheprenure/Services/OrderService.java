@@ -33,10 +33,12 @@ public class OrderService {
     @Autowired
     private CartItemRepository cartitemrepo;
 
+    @Autowired
+    private AuthHelper authHelper;
+
     @org.springframework.transaction.annotation.Transactional
     public String getPlaceOrder(OrdersDto obj) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        int userid = (Integer) auth.getDetails();
+        int userid = authHelper.getCurrentUserId();
 
         if (obj == null || obj.getOrders() == null || obj.getOrders().isEmpty()) {
             return "No order items provided";
@@ -116,23 +118,20 @@ public class OrderService {
 
 
     public List<OrderList> seeorders() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        int userid = (Integer) auth.getDetails();
+        int userid = authHelper.getCurrentUserId();
         List<OrderList> obj = orderlistrepo.findByUserid(userid);
         return obj != null ? obj : Collections.emptyList();
     }
 
     public List<OrderItemList> orderitemss() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        int userid = (Integer) auth.getDetails();
+        int userid = authHelper.getCurrentUserId();
         List<OrderItemList> obj = orderitemrepo.findByUserId(String.valueOf(userid));
         return obj != null ? obj : Collections.emptyList();
     }
 
     @org.springframework.transaction.annotation.Transactional
     public String cancelOrder(long orderId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        int userid = (Integer) auth.getDetails();
+        int userid = authHelper.getCurrentUserId();
 
         OrderList order = orderlistrepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));

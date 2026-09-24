@@ -25,16 +25,20 @@ public class jwt {
   k=Keys.hmacShaKeyFor(secretkey.getBytes());
   }
 
-  public  String generateToken(UserEntity dbobj){
-    return Jwts.builder()
+  public String generateToken(UserEntity dbobj) {
+    var builder = Jwts.builder()
                .subject(dbobj.getName())
-               .claim("id",dbobj.getUserId())
+               .claim("id", dbobj.getUserId())
                .claim("role", dbobj.getRole())
                .issuedAt(new Date())
-               .expiration(new Date(System.currentTimeMillis()+1000*60*60))
-               .signWith(k)
-               .compact();
+               .expiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24))
+               .signWith(k);
 
+    if (dbobj.getEmail() != null && !dbobj.getEmail().isBlank()) {
+        builder.claim("email", dbobj.getEmail());
+    }
+
+    return builder.compact();
   }
 
   public  String extractUserName(String token){
@@ -49,13 +53,24 @@ public class jwt {
   }
 
 
-  public  int extractId(String token){
-    return Jwts.parser()
-               .verifyWith(k)
-               .build()
-               .parseSignedClaims(token)
-               .getPayload()
-               .get("id",Integer.class);
+  public int extractId(String token) {
+      try {
+          Object val = Jwts.parser()
+                     .verifyWith(k)
+                     .build()
+                     .parseSignedClaims(token)
+                     .getPayload()
+                     .get("id");
+          if (val instanceof Number) {
+              return ((Number) val).intValue();
+          }
+          if (val instanceof String) {
+              return Integer.parseInt((String) val);
+          }
+      } catch (Exception e) {
+          // If token has no valid id, return -1
+      }
+      return -1;
   }
 
 
@@ -79,15 +94,26 @@ public class jwt {
                .getExpiration();
   }
 
-  public  String ExtractRole(String token){
+  public String ExtractRole(String token){
     return Jwts.parser()
         .verifyWith(k)
         .build()
         .parseSignedClaims(token)
         .getPayload()
         .get("role",String.class);
-        
   }
 
-    
+  public String extractEmail(String token) {
+      try {
+          return Jwts.parser()
+                     .verifyWith(k)
+                     .build()
+                     .parseSignedClaims(token)
+                     .getPayload()
+                     .get("email", String.class);
+      } catch (Exception e) {
+          return null;
+      }
+  }
+
 }

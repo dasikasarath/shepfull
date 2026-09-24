@@ -20,11 +20,13 @@ public class GlobalCorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allow the configured frontend origin (and localhost for dev)
-        config.setAllowedOrigins(Arrays.asList(
+        // Allow the configured frontend origin, local dev origins, and Render domains
+        config.setAllowedOriginPatterns(Arrays.asList(
+            "*",
             frontendUrl.trim().replaceAll("/+$", ""),
-            "http://localhost:5173",
-            "http://localhost:3000"
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            "https://*.onrender.com"
         ));
 
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
