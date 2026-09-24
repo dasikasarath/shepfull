@@ -44,6 +44,12 @@ export async function apiRequest<T>(
     headers.set('Content-Type', 'application/json')
   }
 
+  // Attach token from localStorage if available (ensures requests succeed even when third-party cookies are blocked)
+  const savedToken = localStorage.getItem('jwt_token')
+  if (_auth && savedToken && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${savedToken}`)
+  }
+
   // ── Try real backend first (unless already in mock mode) ──
   if (!useMockMode) {
     try {

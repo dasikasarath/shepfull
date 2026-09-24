@@ -1,9 +1,6 @@
 package ec.example.sheprenure.Services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import ec.example.sheprenure.Repository.Forgotmailrepo;
@@ -16,8 +13,6 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-
-import javax.management.RuntimeErrorException;
 
 import ec.example.sheprenure.Entity.*;
 

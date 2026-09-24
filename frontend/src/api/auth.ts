@@ -45,6 +45,7 @@ export async function getCurrentUser(): Promise<AuthUser> {
 }
 
 export async function logout(): Promise<string> {
+  localStorage.removeItem('jwt_token')
   return apiText('/logouts', { method: 'POST' })
 }
 

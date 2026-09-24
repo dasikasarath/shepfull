@@ -127,6 +127,7 @@ export interface AuthUser {
   name: string
   role: 'USER' | 'ADMIN'
   id: number
+  email?: string
 }
 
 export interface ApiError {

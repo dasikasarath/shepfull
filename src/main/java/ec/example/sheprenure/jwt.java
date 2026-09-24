@@ -4,20 +4,18 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 
-import java.security.*;
-import java.time.Instant;
 import java.util.*;
+import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import ec.example.sheprenure.Entity.UserEntity;
-import io.jsonwebtoken.SignatureAlgorithm;
 
 
 @Component
 public class jwt {
-  private Key k;
+  private SecretKey k;
 
   @Value("${jwt.secret}")
   private String secretkey;
@@ -29,12 +27,12 @@ public class jwt {
 
   public  String generateToken(UserEntity dbobj){
     return Jwts.builder()
-               .setSubject(dbobj.getName())
+               .subject(dbobj.getName())
                .claim("id",dbobj.getUserId())
                .claim("role", dbobj.getRole())
-               .setIssuedAt(new Date())
-               .setExpiration(new Date(System.currentTimeMillis()+1000*60*60))
-               .signWith(k,SignatureAlgorithm.HS256)
+               .issuedAt(new Date())
+               .expiration(new Date(System.currentTimeMillis()+1000*60*60))
+               .signWith(k)
                .compact();
 
   }
@@ -42,10 +40,10 @@ public class jwt {
   public  String extractUserName(String token){
 
     return Jwts.parser()
-               .setSigningKey(k)
+               .verifyWith(k)
                .build()
-               .parseClaimsJws(token)
-               .getBody()
+               .parseSignedClaims(token)
+               .getPayload()
                .getSubject();
                
   }
@@ -53,10 +51,10 @@ public class jwt {
 
   public  int extractId(String token){
     return Jwts.parser()
-               .setSigningKey(k)
+               .verifyWith(k)
                .build()
-               .parseClaimsJws(token)
-               .getBody()
+               .parseSignedClaims(token)
+               .getPayload()
                .get("id",Integer.class);
   }
 
@@ -74,19 +72,19 @@ public class jwt {
 
   public  Date ExtractExpir(String token){
     return Jwts.parser()
-               .setSigningKey(k)
+               .verifyWith(k)
                .build()
-               .parseClaimsJws(token)
-               .getBody()
+               .parseSignedClaims(token)
+               .getPayload()
                .getExpiration();
   }
 
   public  String ExtractRole(String token){
     return Jwts.parser()
-        .setSigningKey(k)
+        .verifyWith(k)
         .build()
-        .parseClaimsJws(token)
-        .getBody()
+        .parseSignedClaims(token)
+        .getPayload()
         .get("role",String.class);
         
   }

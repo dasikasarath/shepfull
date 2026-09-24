@@ -5,7 +5,7 @@ import ec.example.sheprenure.Entity.*;
 import java.util.*;
 
 public interface OrderItemListRepository extends JpaRepository<OrderItemList, Integer> {
-    List<OrderItemList> findByUserId(int userid);
+    List<OrderItemList> findByUserId(String userId);
     List<OrderItemList> findByOrderId(long orderId);
 }
 

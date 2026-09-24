@@ -8,7 +8,7 @@ import java.util.*;
 import ec.example.sheprenure.Entity.CartItem;
 import ec.example.sheprenure.Repository.CartItemRepository;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+
 @Service
 public class CartItemService {
     @Autowired

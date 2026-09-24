@@ -143,7 +143,7 @@ public String updatepic(int pid,MultipartFile file){
         return "successfully updated product picture";
 
     }catch(Exception e){
-        throw new RuntimeException("failed to update"+e.getStackTrace());
+        throw new RuntimeException("failed to update: " + e.getMessage(), e);
     }
 
 }

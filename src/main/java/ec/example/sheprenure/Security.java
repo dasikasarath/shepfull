@@ -45,7 +45,10 @@ public class Security {
 
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .requestMatchers("/login", "/user/register/**", "/forgotpassword/**", "/oauth2/**", "/login/oauth2/**", "/oauth/**").permitAll()
+            .requestMatchers(
+                "/login", "/user/register/**", "/forgotpassword/**",
+                "/oauth2/**", "/login/oauth2/**", "/oauth/**", "/error"
+            ).permitAll()
             .requestMatchers("/admin/**").hasRole("ADMIN")
             .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
             .anyRequest().authenticated()
@@ -62,6 +65,12 @@ public class Security {
         if (clientRegistrationRepository != null) {
             http.oauth2Login(oauth2 -> {
                 oauth2.clientRegistrationRepository(clientRegistrationRepository);
+                oauth2.authorizationEndpoint(ae ->
+                    ae.baseUri("/oauth2/authorization")
+                );
+                oauth2.redirectionEndpoint(re ->
+                    re.baseUri("/login/oauth2/code/*")
+                );
                 if (oAuthSuccessHandler != null) {
                     oauth2.successHandler(oAuthSuccessHandler);
                 }

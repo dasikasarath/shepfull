@@ -8,7 +8,6 @@ import ec.example.sheprenure.Repository.*;
 import ec.example.sheprenure.Entity.*;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -126,7 +125,7 @@ public class OrderService {
     public List<OrderItemList> orderitemss() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         int userid = (Integer) auth.getDetails();
-        List<OrderItemList> obj = orderitemrepo.findByUserId(userid);
+        List<OrderItemList> obj = orderitemrepo.findByUserId(String.valueOf(userid));
         return obj != null ? obj : Collections.emptyList();
     }
 

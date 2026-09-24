@@ -21,7 +21,8 @@ public class CartItem {
    private int quantity;
    private int subtotal;
 
-     @ManyToOne   //json ignore use cheste every timr cart chupinchadu//
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @ManyToOne
     @JoinColumn(name = "cart_id")
     private Cart cart;
     

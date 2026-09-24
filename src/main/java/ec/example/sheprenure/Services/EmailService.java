@@ -1,7 +1,11 @@
 package ec.example.sheprenure.Services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -25,6 +29,12 @@ public class EmailService {
     @Value("${brevo.sender-name:SHEPRENURE}")
     private String senderName;
 
+    @Value("${spring.mail.username:}")
+    private String smtpUsername;
+
+    @Autowired(required = false)
+    private JavaMailSender mailSender;
+
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
@@ -36,76 +46,119 @@ public class EmailService {
     }
 
     /**
-     * Send a plain text email via Brevo REST API (HTTPS port 443).
+     * Send a plain text email.
      */
     public boolean sendEmail(String toEmail, String subject, String textContent) {
-        return sendHtmlEmail(toEmail, subject, "<div style='font-family: sans-serif; font-size: 15px; color: #333; line-height: 1.6;'>" + textContent.replace("\n", "<br/>") + "</div>", textContent);
+        return sendHtmlEmail(
+                toEmail,
+                subject,
+                "<div style='font-family: sans-serif; font-size: 15px; color: #333; line-height: 1.6;'>" + textContent.replace("\n", "<br/>") + "</div>",
+                textContent
+        );
     }
 
     /**
-     * Send an HTML email with text fallback via Brevo REST API.
+     * Send an HTML email with dual delivery strategy:
+     * 1. Attempts Brevo REST API if a valid HTTP API key (xkeysib-...) is configured.
+     * 2. Falls back to Spring JavaMailSender (SMTP port 587) using Gmail / configured SMTP.
      */
     public boolean sendHtmlEmail(String toEmail, String subject, String htmlContent, String textContent) {
         if (toEmail == null || toEmail.isBlank()) {
-            System.err.println("[Brevo Email] Target email is blank, skipping send.");
+            System.err.println("[Email] Target email is blank, skipping send.");
             return false;
         }
 
-        if (apiKey == null || apiKey.isBlank()) {
-            System.err.println("[Brevo Email] Brevo API key is not configured! Please set BREVO_API_KEY environment variable.");
-            return false;
-        }
+        String fromEmail = (senderEmail != null && !senderEmail.isBlank())
+                ? senderEmail.trim()
+                : (smtpUsername != null && !smtpUsername.isBlank() ? smtpUsername.trim() : "sarathdasika@gmail.com");
 
-        String fromEmail = (senderEmail != null && !senderEmail.isBlank()) ? senderEmail.trim() : "sarathdasika@gmail.com";
+        boolean brevoAttempted = false;
 
-        try {
-            Map<String, Object> payload = new HashMap<>();
+        // ── Strategy 1: Brevo REST API (HTTPS port 443) ──
+        if (apiKey != null && !apiKey.isBlank() && !apiKey.trim().startsWith("xsmtpsib-")) {
+            brevoAttempted = true;
+            try {
+                Map<String, Object> payload = new HashMap<>();
 
-            Map<String, String> sender = new HashMap<>();
-            sender.put("name", senderName);
-            sender.put("email", fromEmail);
-            payload.put("sender", sender);
+                Map<String, String> sender = new HashMap<>();
+                sender.put("name", senderName);
+                sender.put("email", fromEmail);
+                payload.put("sender", sender);
 
-            Map<String, String> recipient = new HashMap<>();
-            recipient.put("email", toEmail.trim());
-            payload.put("to", Collections.singletonList(recipient));
+                Map<String, String> recipient = new HashMap<>();
+                recipient.put("email", toEmail.trim());
+                payload.put("to", Collections.singletonList(recipient));
 
-            payload.put("subject", subject);
-            payload.put("htmlContent", htmlContent);
-            if (textContent != null && !textContent.isBlank()) {
-                payload.put("textContent", textContent);
+                payload.put("subject", subject);
+                payload.put("htmlContent", htmlContent);
+                if (textContent != null && !textContent.isBlank()) {
+                    payload.put("textContent", textContent);
+                }
+
+                String requestBody = objectMapper.writeValueAsString(payload);
+
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                        .header("api-key", apiKey.trim())
+                        .header("Content-Type", "application/json")
+                        .header("Accept", "application/json")
+                        .timeout(Duration.ofSeconds(15))
+                        .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                        .build();
+
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+                if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                    System.out.println("[Brevo Email] Email sent successfully to " + toEmail + " (Status: " + response.statusCode() + ")");
+                    return true;
+                } else {
+                    System.err.println("[Brevo Email] REST API returned HTTP " + response.statusCode() + ": " + response.body() + " — Falling back to SMTP...");
+                }
+            } catch (Exception e) {
+                System.err.println("[Brevo Email] REST API call failed: " + e.getMessage() + " — Falling back to SMTP...");
             }
+        } else if (apiKey != null && apiKey.trim().startsWith("xsmtpsib-")) {
+            System.out.println("[Email] Note: The configured Brevo key is an SMTP relay key (xsmtpsib-...), routing through SMTP.");
+        }
 
-            String requestBody = objectMapper.writeValueAsString(payload);
+        // ── Strategy 2: Spring JavaMailSender (SMTP) ──
+        if (mailSender != null) {
+            try {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                helper.setFrom(fromEmail, senderName);
+                helper.setTo(toEmail.trim());
+                helper.setSubject(subject);
+                helper.setText(textContent != null ? textContent : "", htmlContent);
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
-                    .header("api-key", apiKey.trim())
-                    .header("Content-Type", "application/json")
-                    .header("Accept", "application/json")
-                    .timeout(Duration.ofSeconds(15))
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-            if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                System.out.println("[Brevo Email] Email sent successfully to " + toEmail + " (Status: " + response.statusCode() + ")");
+                mailSender.send(message);
+                System.out.println("[SMTP Email] Email successfully sent to " + toEmail + " via SMTP (" + fromEmail + ")");
                 return true;
-            } else {
-                System.err.println("[Brevo Email] Failed to send email to " + toEmail + ". HTTP Status: " + response.statusCode() + " Body: " + response.body());
-                return false;
+            } catch (Exception e) {
+                System.err.println("[SMTP Email] Failed to send email via SMTP to " + toEmail + ": " + e.getMessage());
             }
-        } catch (Exception e) {
-            System.err.println("[Brevo Email] Error while sending email to " + toEmail + ": " + e.getMessage());
-            return false;
+        } else {
+            System.err.println("[Email] JavaMailSender is not configured/available.");
         }
+
+        if (!brevoAttempted && mailSender == null) {
+            System.err.println("[Email] Neither Brevo REST API nor JavaMailSender SMTP could send the email. Please check your credentials.");
+        }
+
+        return false;
     }
 
     /**
      * Send formatted branded OTP email for Verification or Password Reset.
+     * Always logs the OTP to the console so developers and admins can view it even in offline/dev environments.
      */
     public boolean sendOtpEmail(String toEmail, String otp, String title, String subtitle, int expiryMinutes) {
+        // Prominent console log so OTP is never lost
+        System.out.println("=================================================");
+        System.out.println(" [SHEPRENURE OTP] " + title + " for " + toEmail + " : " + otp);
+        System.out.println(" Valid for " + expiryMinutes + " minutes");
+        System.out.println("=================================================");
+
         String html = "<!DOCTYPE html>"
                 + "<html>"
                 + "<head><meta charset='UTF-8'></head>"

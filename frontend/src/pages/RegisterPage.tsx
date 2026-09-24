@@ -6,7 +6,8 @@ import { useToast } from '../context/ToastContext'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Card from '../components/ui/Card'
-import { ApiClientError } from '../api/client'
+import { ApiClientError, isMockMode } from '../api/client'
+import { useAuth } from '../context/AuthContext'
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -27,7 +28,22 @@ export default function RegisterPage() {
   const [isEmailVerified, setIsEmailVerified] = useState(false)
 
   const { showToast } = useToast()
+  const { loginWithUser } = useAuth()
   const navigate = useNavigate()
+
+  const handleGoogleClick = (e: React.MouseEvent) => {
+    if (isMockMode()) {
+      e.preventDefault()
+      loginWithUser({
+        id: 1,
+        name: 'John Doe',
+        email: 'john@example.com',
+        role: 'USER',
+      })
+      showToast('Signed up and logged in as John Doe (Mock Mode)', 'success')
+      navigate('/dashboard')
+    }
+  }
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>
@@ -228,6 +244,7 @@ export default function RegisterPage() {
 
           <a
             href={authApi.GOOGLE_AUTH_URL}
+            onClick={handleGoogleClick}
             className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 active:scale-[0.99]"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">

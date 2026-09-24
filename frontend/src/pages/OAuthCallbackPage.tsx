@@ -18,12 +18,18 @@ export default function OAuthCallbackPage() {
 
   useEffect(() => {
     const error = searchParams.get('error')
+    const token = searchParams.get('token')
 
     if (error) {
       setStatus('error')
       setErrorMessage(decodeURIComponent(error))
       showToast(decodeURIComponent(error), 'error')
       return
+    }
+
+    if (token) {
+      localStorage.setItem('jwt_token', token)
+      window.history.replaceState({}, document.title, window.location.pathname)
     }
 
     refreshUser()

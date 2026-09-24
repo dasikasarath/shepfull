@@ -17,6 +17,7 @@ public class Blocklist {
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private int id;
 
+    @jakarta.persistence.Column(length = 2048)
     private String token;
     private Instant expirey;
     

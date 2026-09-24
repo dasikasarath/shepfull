@@ -1,15 +1,11 @@
 package ec.example.sheprenure.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.web.bind.annotation.RestController;
 
 import ec.example.sheprenure.Services.Forgotservice;
 import ec.example.sheprenure.dto.PasswordsetDto;
 import ec.example.sheprenure.dto.VerifyotpDto;
-import jakarta.mail.internet.MimeMessage;
 
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;

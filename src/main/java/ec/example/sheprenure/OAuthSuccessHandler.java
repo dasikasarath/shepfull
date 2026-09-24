@@ -69,16 +69,15 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
             user.setIsVerified(true);
             user = userRepository.save(user);
         } else {
-            // 3. For existing user: check if user is verified before generating token
+            // 3. For existing user: OAuth authentication proves ownership of the email,
+            // so automatically mark user as verified if not already verified.
             if (user.getIsVerified() == null || !user.getIsVerified()) {
-                String redirectUrl = cleanFrontendUrl + "/oauth/callback?error=" + 
-                    URLEncoder.encode("Please verify your email before logging in", StandardCharsets.UTF_8);
-                getRedirectStrategy().sendRedirect(request, response, redirectUrl);
-                return;
+                user.setIsVerified(true);
+                user = userRepository.save(user);
             }
         }
 
-        // Generate JWT token only when user is verified
+        // Generate JWT token
         String token = jwtUtil.generateToken(user);
 
         // Set HttpOnly cookie with secure flag on HTTPS
@@ -86,8 +85,9 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
                 || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
         CookieUtils.addCookieToResponse(response, CookieUtils.createJwtCookie(token, isSecure));
 
-        // Redirect user to frontend without exposing token in query parameter
-        String redirectUrl = cleanFrontendUrl + "/oauth/callback";
+        // Redirect user to frontend with token parameter as a resilient fallback
+        // (in case browser blocks cross-origin cookies in dev or production)
+        String redirectUrl = cleanFrontendUrl + "/oauth/callback?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }
