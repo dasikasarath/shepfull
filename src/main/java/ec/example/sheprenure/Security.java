@@ -45,10 +45,19 @@ public class Security {
 
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            // Public Auth & OAuth endpoints
             .requestMatchers(
                 "/login", "/user/register/**", "/forgotpassword/**",
                 "/oauth2/**", "/login/oauth2/**", "/oauth/**", "/error"
             ).permitAll()
+            // Static resources and SPA pages (so client-side routing and assets never 401/404)
+            .requestMatchers(
+                "/", "/index.html", "/favicon.*", "/assets/**", "/*.svg", "/*.ico",
+                "/*.png", "/*.jpg", "/*.jpeg", "/*.css", "/*.js", "/_redirects",
+                "/dashboard", "/dashboard/**", "/products", "/products/**",
+                "/cart", "/orders", "/profile", "/register", "/forgot-password"
+            ).permitAll()
+            // Protected APIs
             .requestMatchers("/admin/**").hasRole("ADMIN")
             .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
             .anyRequest().authenticated()

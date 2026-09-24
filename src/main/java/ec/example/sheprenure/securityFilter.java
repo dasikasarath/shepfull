@@ -38,11 +38,36 @@ public class securityFilter extends OncePerRequestFilter {
         }
 
         String path = request.getRequestURI();
+
+        // 1. Bypass authentication for public auth endpoints and OAuth redirects
         if (path.equals("/login") || path.startsWith("/user/register") || path.contains("/forgotpassword")
             || path.startsWith("/oauth2/") || path.startsWith("/login/oauth2/") || path.startsWith("/oauth/")
             || path.equals("/error")) {
             filterChain.doFilter(request, response);
             return;
+        }
+
+        // 2. Bypass authentication for static assets and client-side SPA pages
+        // (API endpoints like /user/getall, /admin/**, /cart/**, etc. are NOT bypassed)
+        if (path.equals("/") || path.equals("/index.html") || path.startsWith("/assets/")
+            || path.endsWith(".js") || path.endsWith(".css") || path.endsWith(".svg")
+            || path.endsWith(".ico") || path.endsWith(".png") || path.endsWith(".jpg")
+            || path.endsWith(".jpeg") || path.equals("/favicon.ico") || path.equals("/favicon.svg")
+            || path.equals("/_redirects")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 3. For GET requests to SPA navigation routes that are NOT backend API routes,
+        // let them pass through so SpaController forwards to index.html
+        if ("GET".equalsIgnoreCase(request.getMethod())) {
+            if (path.equals("/dashboard") || path.startsWith("/dashboard/")
+                || path.equals("/cart") || path.equals("/orders") || path.equals("/profile")
+                || path.equals("/register") || path.equals("/forgot-password")
+                || (path.startsWith("/products") && !path.startsWith("/products/api"))) {
+                filterChain.doFilter(request, response);
+                return;
+            }
         }
 
         String token = CookieUtils.getJwtFromCookies(request);
@@ -102,4 +127,3 @@ public class securityFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
-

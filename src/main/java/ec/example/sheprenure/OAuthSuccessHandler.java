@@ -40,6 +40,16 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
         String cleanFrontendUrl = (frontendUrl != null ? frontendUrl.trim().replaceAll("/+$", "") : "http://localhost:5173");
 
+        // If frontendUrl still points to localhost, but we are running in production on a remote domain (e.g. Render):
+        String host = request.getHeader("Host");
+        String proto = request.getHeader("X-Forwarded-Proto");
+        if (proto == null || proto.isBlank()) {
+            proto = request.isSecure() ? "https" : "http";
+        }
+        if (cleanFrontendUrl.contains("localhost") && host != null && !host.contains("localhost") && !host.contains("127.0.0.1")) {
+            cleanFrontendUrl = proto + "://" + host;
+        }
+
         if (email == null || email.isBlank()) {
             String redirectUrl = cleanFrontendUrl + "/oauth/callback?error=" + URLEncoder.encode("Email not provided by Google account", StandardCharsets.UTF_8);
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
